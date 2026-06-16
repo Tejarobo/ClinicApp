@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { Search, UserPlus, Edit3, Trash2, ArrowUpDown, ChevronRight, X, Sparkles, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { getStoredPatients, getStoredOPRecords, addPatient, updatePatient, savePatients } from "@/lib/mock-data";
-import type { Patient, OPRecord, Gender, BloodGroup } from "@/types";
+import type { Patient, OPRecord, Gender } from "@/types";
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [opRecords, setOpRecords] = useState<OPRecord[]>([]);
+  const [patients, setPatients] = useState<Patient[]>(() => getStoredPatients());
+  const [opRecords, setOpRecords] = useState<OPRecord[]>(() => getStoredOPRecords());
   const [query, setQuery] = useState("");
-  const [sortField, setSortField] = useState<"name" | "file_no" | "last_visit">("file_no");
+  const [sortField, setSortField] = useState<"name" | "file_number" | "last_visit">("file_number");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Drawer / Form State
@@ -18,12 +18,11 @@ export default function PatientsPage() {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   
   // Form Fields
+  const [fileNumber, setFileNumber] = useState("");
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState<Gender>("male");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [bloodGroup, setBloodGroup] = useState<BloodGroup>("B+");
   const [disease, setDisease] = useState("");
   const [notes, setNotes] = useState("");
   const [validityDays, setValidityDays] = useState(30);
@@ -37,20 +36,17 @@ export default function PatientsPage() {
   }
 
   useEffect(() => {
-    loadData();
-    // Poll data occasionally for reactive sync
     const interval = setInterval(loadData, 2000);
     return () => clearInterval(interval);
   }, []);
 
   function handleOpenAdd() {
     setEditingPatient(null);
+    setFileNumber("");
     setName("");
     setAge("");
     setGender("male");
     setPhone("");
-    setAddress("");
-    setBloodGroup("B+");
     setDisease("");
     setNotes("");
     setValidityDays(30);
@@ -61,12 +57,11 @@ export default function PatientsPage() {
   function handleOpenEdit(p: Patient) {
     const op = opRecords.find(o => o.patient_id === p.id);
     setEditingPatient(p);
+    setFileNumber(p.file_number);
     setName(p.name);
     setAge(p.age.toString());
     setGender(p.gender);
     setPhone(p.phone);
-    setAddress(p.address);
-    setBloodGroup(p.blood_group);
     setDisease(p.disease);
     setNotes(p.notes);
     setValidityDays(op ? op.validity_days : 30);
@@ -85,42 +80,56 @@ export default function PatientsPage() {
 
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!fileNumber.trim()) { setError("File number is required"); return; }
     if (!name.trim()) { setError("Name is required"); return; }
     if (!age || isNaN(Number(age)) || Number(age) <= 0) { setError("Enter a valid age"); return; }
     if (!phone || phone.length < 10) { setError("Enter a valid 10-digit phone number"); return; }
-    if (!disease.trim()) { setError("Primary disease/complaint is required"); return; }
+    if (!disease.trim()) { setError("Chief complaint/disease is required"); return; }
+
+    // Unique file number check
+    const duplicate = patients.some(
+      p =>
+        p.file_number.toLowerCase().trim() === fileNumber.toLowerCase().trim() &&
+        (!editingPatient || p.id !== editingPatient.id)
+    );
+    if (duplicate) {
+      setError(`File number "${fileNumber}" is already registered.`);
+      return;
+    }
 
     setError("");
 
     const patientDetails = {
+      file_number: fileNumber.trim(),
       name: name.trim(),
       age: parseInt(age),
       gender,
       phone: phone.trim(),
-      address: address.trim(),
-      blood_group: bloodGroup,
       disease: disease.trim(),
       notes: notes.trim(),
       tags: editingPatient ? editingPatient.tags : [],
     };
 
-    if (editingPatient) {
-      // Find current OP and status
-      const op = opRecords.find(o => o.patient_id === editingPatient.id);
-      updatePatient(editingPatient.id, {
-        ...patientDetails,
-        validityDays,
-        opStatus: op ? op.status : "active"
-      });
-    } else {
-      addPatient({
-        ...patientDetails,
-        validityDays,
-      });
-    }
+    try {
+      if (editingPatient) {
+        const op = opRecords.find(o => o.patient_id === editingPatient.id);
+        updatePatient(editingPatient.id, {
+          ...patientDetails,
+          validityDays,
+          opStatus: op ? op.status : "active"
+        });
+      } else {
+        addPatient({
+          ...patientDetails,
+          validityDays,
+        });
+      }
 
-    setIsOpen(false);
-    loadData();
+      setIsOpen(false);
+      loadData();
+    } catch (err) {
+      setError((err as Error).message || "An error occurred saving records.");
+    }
   }
 
   // Sort and Filter patients
@@ -129,7 +138,7 @@ export default function PatientsPage() {
     if (!q) return true;
     return (
       p.name.toLowerCase().includes(q) ||
-      p.file_no.toLowerCase().includes(q) ||
+      p.file_number.toLowerCase().includes(q) ||
       p.phone.includes(q)
     );
   });
@@ -138,8 +147,8 @@ export default function PatientsPage() {
     let comparison = 0;
     if (sortField === "name") {
       comparison = a.name.localeCompare(b.name);
-    } else if (sortField === "file_no") {
-      comparison = a.file_no.localeCompare(b.file_no);
+    } else if (sortField === "file_number") {
+      comparison = a.file_number.localeCompare(b.file_number);
     } else if (sortField === "last_visit") {
       const dateA = a.last_visit ? new Date(a.last_visit).getTime() : 0;
       const dateB = b.last_visit ? new Date(b.last_visit).getTime() : 0;
@@ -148,7 +157,7 @@ export default function PatientsPage() {
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
-  function toggleSort(field: "name" | "file_no" | "last_visit") {
+  function toggleSort(field: "name" | "file_number" | "last_visit") {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -169,7 +178,7 @@ export default function PatientsPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-[25px] font-extrabold text-gray-900 tracking-tight">Patient Directory</h1>
-          <p className="text-xs text-[#627A70] mt-0.5">Manage and track your active patient OP logs</p>
+          <p className="text-xs text-[#627A70] mt-0.5">Manage and search clinical case files</p>
         </div>
         <button
           onClick={handleOpenAdd}
@@ -185,7 +194,7 @@ export default function PatientsPage() {
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="Search by name, file number, or phone..."
+            placeholder="Search by file number, name, or phone..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full h-11 pl-10 pr-4 rounded-2xl border border-[#E6EFEA] bg-white text-sm text-gray-900 outline-none focus:border-[#10B981] focus:ring-2 focus:ring-emerald-50 transition-all placeholder-gray-400"
@@ -196,10 +205,10 @@ export default function PatientsPage() {
         {/* Sorting controls */}
         <div className="flex gap-2">
           <button
-            onClick={() => toggleSort("file_no")}
-            className={`flex items-center gap-1.5 h-11 px-4 rounded-xl border border-[#E6EFEA] text-xs font-semibold bg-white transition-all hover:bg-gray-50 ${sortField === "file_no" ? "border-[#10B981] text-[#10B981]" : "text-gray-500"}`}
+            onClick={() => toggleSort("file_number")}
+            className={`flex items-center gap-1.5 h-11 px-4 rounded-xl border border-[#E6EFEA] text-xs font-semibold bg-white transition-all hover:bg-gray-50 ${sortField === "file_number" ? "border-[#10B981] text-[#10B981]" : "text-gray-500"}`}
           >
-            <span>File No</span>
+            <span>File Number</span>
             <ArrowUpDown size={12} />
           </button>
           <button
@@ -225,7 +234,7 @@ export default function PatientsPage() {
           <div className="px-6 py-16 text-center">
             <Search size={40} className="mx-auto text-gray-200 mb-3" />
             <p className="text-sm text-gray-400 font-bold">No patients found</p>
-            <p className="text-xs text-gray-400 mt-1">Try refining your search keyword or create a new patient record.</p>
+            <p className="text-xs text-gray-400 mt-1">Try searching by File Number, Name, or Phone, or register a new record.</p>
           </div>
         ) : (
           <div className="divide-y divide-[#E6EFEA]">
@@ -248,11 +257,11 @@ export default function PatientsPage() {
                           {p.name}
                         </span>
                         <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200/50 px-1.5 py-0.5 rounded">
-                          {p.file_no}
+                          {p.file_number}
                         </span>
                       </div>
                       <p className="text-xs text-gray-400 mt-1 truncate">
-                        {p.age} yrs · {p.gender} · {p.phone} · <span className="text-gray-500 font-medium">{p.disease}</span>
+                        {p.age} yrs · {p.gender} · {p.phone} · <span className="text-[#10B981] font-bold">{p.disease}</span>
                       </p>
                     </div>
                   </Link>
@@ -311,7 +320,7 @@ export default function PatientsPage() {
                   {editingPatient ? "Edit Patient File" : "Register New Patient"}
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {editingPatient ? `Modify details for ${editingPatient.file_no}` : "Create a new medical file number"}
+                  {editingPatient ? `Modify details for ${editingPatient.file_number}` : "Create a new medical file entry"}
                 </p>
               </div>
               <button
@@ -330,6 +339,19 @@ export default function PatientsPage() {
                   <span>{error}</span>
                 </div>
               )}
+
+              {/* File Number */}
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">File Number (Custom) *</label>
+                <input
+                  type="text"
+                  value={fileNumber}
+                  onChange={(e) => setFileNumber(e.target.value)}
+                  placeholder="e.g. OP-102 or B-54"
+                  className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 uppercase"
+                  disabled={!!editingPatient}
+                />
+              </div>
 
               {/* Name */}
               <div>
@@ -369,35 +391,16 @@ export default function PatientsPage() {
                 </div>
               </div>
 
-              {/* Grid Phone & Blood Group */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Phone Number *</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))}
-                    placeholder="e.g. 9876543210"
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Blood Group</label>
-                  <select
-                    value={bloodGroup}
-                    onChange={(e) => setBloodGroup(e.target.value as BloodGroup)}
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all"
-                  >
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
+              {/* Phone */}
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Phone Number *</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))}
+                  placeholder="e.g. 9876543210"
+                  className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400"
+                />
               </div>
 
               {/* OP Validity duration */}
@@ -419,25 +422,13 @@ export default function PatientsPage() {
 
               {/* Primary Complaint / Disease */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Primary Diagnosis / Disease *</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Primary Disease / Chief Complaint *</label>
                 <input
                   type="text"
                   value={disease}
                   onChange={(e) => setDisease(e.target.value)}
-                  placeholder="e.g. Type 2 Diabetes, Hypertension"
+                  placeholder="e.g. Chronic Asthma, Eczema"
                   className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400"
-                />
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Address</label>
-                <textarea
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="e.g. 12, MG Road, Chennai"
-                  rows={2}
-                  className="w-full p-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 resize-none"
                 />
               </div>
 
@@ -447,7 +438,7 @@ export default function PatientsPage() {
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. On Metformin 500mg. Monitor creatinine level."
+                  placeholder="e.g. Symptoms aggravate during winter. Has family history of diabetes."
                   rows={3}
                   className="w-full p-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 resize-none"
                 />

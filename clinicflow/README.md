@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+# ClinicFlow
+
+ClinicFlow is a Next.js demo app for managing a clinic's day-to-day workflow. It provides a polished patient management experience with a login flow, dashboard analytics, appointment scheduling, payment tracking, notification logs, and configurable clinic settings.
+
+The app is currently implemented as a front-end-first prototype. Data is stored in browser local storage and seeded from mock records in the repository, so it runs without any backend or database.
+
+## Features
+
+- Demo sign-in with phone number or Google-style quick login
+- Role-based session presets for doctor, receptionist, and admin users
+- Dashboard with live-looking clinic metrics, patient shortcuts, appointments, revenue, and pending dues
+- Patient directory with search, sort, add, edit, and delete flows
+- Appointment scheduler with patient selection and visit type support
+- Payments ledger with paid and pending totals
+- Notification queue with cron simulation, queue processing, reset, and clear actions
+- Settings screen for clinic profile, OP validity, and reminder channel preferences
+- Spotlight search and responsive sidebar/header layout
+
+## Tech Stack
+
+- Next.js 14 with the App Router
+- React 18
+- TypeScript
+- Tailwind CSS
+- Lucide React icons
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18 or newer
+- npm
+
+### Install
+
+```bash
+npm install
+```
+
+### Run the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the app in your browser at http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If port 3000 is already in use, Next.js will automatically fall back to another port such as 3001.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Available Scripts
 
-## Learn More
+- `npm run dev` - start the development server
+- `npm run build` - create a production build
+- `npm run start` - run the production server
+- `npm run lint` - run Next.js linting
 
-To learn more about Next.js, take a look at the following resources:
+## Demo Login
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Use one of the quick roles on the login screen, or enter a 10-digit phone number and OTP.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Demo OTP: `123456`
 
-## Deploy on Vercel
+Quick role phone numbers:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Doctor: `9876543210`
+- Receptionist: `9123456789`
+- Admin: `9988776655`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+- `app/` - route segments, layouts, and pages
+- `components/` - shared UI such as the header, sidebar, and cards
+- `lib/mock-data.ts` - seeded clinic data and local-storage helpers
+- `types/` - shared TypeScript types
+
+## Notes
+
+- The home route redirects to `/login`.
+- The app uses browser local storage for session state and mock records.
+- Most screens are interactive, but the project does not currently include a backend API.
+
+## Browser Support
+
+The app is designed for modern desktop and mobile browsers.
+

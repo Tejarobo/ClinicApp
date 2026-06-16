@@ -1,64 +1,73 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Clock,
   FileText,
-  User,
-  Phone,
-  Heart,
   Plus,
   X,
   AlertTriangle,
   RotateCw,
   Eye,
   Trash2,
-  DollarSign,
-  TrendingUp,
-  Tag,
   Stethoscope,
   Activity,
-  Layers,
-  Sparkles
+  UserPlus,
+  type LucideIcon
 } from "lucide-react";
 import Link from "next/link";
 import {
   getStoredPatients,
   getStoredVisits,
   getStoredOPRecords,
-  getStoredPayments,
   getStoredMedicalFiles,
   getStoredActivityLogs,
   addVisit,
-  addPayment,
   addMedicalFile,
   updatePatient,
-  addActivityLog,
   savePatients
 } from "@/lib/mock-data";
-import type { Patient, Visit, OPRecord, Payment, MedicalFile, ActivityLog, VisitType } from "@/types";
+import type { Patient, Visit, OPRecord, MedicalFile, ActivityLog, VisitType, FileType } from "@/types";
 
-type TabType = "overview" | "timeline" | "visits" | "files" | "payments" | "settings";
+type TabType = "overview" | "visits" | "files" | "timeline";
+
+function loadPatientSnapshot(patientId: string) {
+  const allPatients = getStoredPatients();
+  const foundPatient = allPatients.find((p) => p.id === patientId) || null;
+
+  const allVisits = getStoredVisits();
+  const allOPs = getStoredOPRecords();
+  const allFiles = getStoredMedicalFiles();
+  const allLogs = getStoredActivityLogs();
+
+  return {
+    patient: foundPatient,
+    visits: allVisits.filter((visit) => visit.patient_id === patientId),
+    opRecord: allOPs.find((record) => record.patient_id === patientId) || null,
+    files: allFiles.filter((file) => file.patient_id === patientId),
+    logs: allLogs
+      .filter((log) => log.patient_id === patientId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+  };
+}
 
 export default function PatientProfilePage() {
   const params = useParams();
   const router = useRouter();
   const patientId = params.id as string;
 
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [opRecord, setOpRecord] = useState<OPRecord | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [files, setFiles] = useState<MedicalFile[]>([]);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const initialSnapshot = loadPatientSnapshot(patientId);
+  const [patient, setPatient] = useState<Patient | null>(initialSnapshot.patient);
+  const [visits, setVisits] = useState<Visit[]>(initialSnapshot.visits);
+  const [opRecord, setOpRecord] = useState<OPRecord | null>(initialSnapshot.opRecord);
+  const [files, setFiles] = useState<MedicalFile[]>(initialSnapshot.files);
+  const [logs, setLogs] = useState<ActivityLog[]>(initialSnapshot.logs);
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Modals state
   const [isVisitOpen, setIsVisitOpen] = useState(false);
   const [isFileOpen, setIsFileOpen] = useState(false);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<MedicalFile | null>(null);
 
@@ -72,21 +81,14 @@ export default function PatientProfilePage() {
 
   // Form Fields - File
   const [fileName, setFileName] = useState("");
-  const [fileType, setFileType] = useState<"prescription" | "report" | "scan" | "xray">("prescription");
+  const [fileType, setFileType] = useState<FileType>("prescription");
   const [fileTemplateUrl, setFileTemplateUrl] = useState("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&auto=format&fit=crop&q=60");
   const [fileError, setFileError] = useState("");
-
-  // Form Fields - Payment
-  const [pAmount, setPAmount] = useState("");
-  const [pStatus, setPStatus] = useState<"paid" | "pending">("paid");
-  const [pMode, setPMode] = useState<"upi" | "cash" | "card">("upi");
-  const [pDesc, setPDesc] = useState("Consultation Charge");
-  const [pError, setPError] = useState("");
 
   // Form Fields - OP
   const [opDays, setOpDays] = useState(30);
 
-  function loadPatientData() {
+  const loadPatientData = useCallback(() => {
     const allPatients = getStoredPatients();
     const foundPatient = allPatients.find((p) => p.id === patientId);
     if (!foundPatient) {
@@ -103,10 +105,6 @@ export default function PatientProfilePage() {
     const allOPs = getStoredOPRecords();
     setOpRecord(allOPs.find(o => o.patient_id === patientId) || null);
 
-    // Payments
-    const allPayments = getStoredPayments();
-    setPayments(allPayments.filter(p => p.patient_id === patientId));
-
     // Files
     const allFiles = getStoredMedicalFiles();
     setFiles(allFiles.filter(f => f.patient_id === patientId));
@@ -114,14 +112,12 @@ export default function PatientProfilePage() {
     // Logs (Timeline)
     const allLogs = getStoredActivityLogs();
     setLogs(allLogs.filter(l => l.patient_id === patientId).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }
+  }, [patientId]);
 
   useEffect(() => {
-    loadPatientData();
     const interval = setInterval(loadPatientData, 2000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId]);
+  }, [loadPatientData]);
 
   if (!patient) {
     return (
@@ -207,31 +203,6 @@ export default function PatientProfilePage() {
     loadPatientData();
   }
 
-  function handleAddPaymentSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const amt = parseFloat(pAmount);
-    if (isNaN(amt) || amt <= 0) {
-      setPError("Enter a valid amount");
-      return;
-    }
-    setPError("");
-
-    addPayment({
-      patient_id: patientId,
-      visit_id: visits[0]?.id || `v_manual_${Date.now()}`,
-      amount: amt,
-      status: pStatus,
-      payment_mode: pMode,
-      date: new Date().toISOString().split("T")[0],
-      description: pDesc.trim()
-    });
-
-    setIsPaymentOpen(false);
-    setPAmount("");
-    setPDesc("Consultation Charge");
-    loadPatientData();
-  }
-
   function handleRenewOP(e: React.FormEvent) {
     e.preventDefault();
     updatePatient(patientId, {
@@ -247,38 +218,26 @@ export default function PatientProfilePage() {
       const all = getStoredPatients();
       const filtered = all.filter(p => p.id !== patientId);
       savePatients(filtered);
-      addActivityLog({
-        patient_id: patientId,
-        type: "registration",
-        description: `Patient file ${patient.file_no} permanently deleted from directories.`,
-        date: new Date().toISOString()
-      });
       router.push("/patients");
     }
   }
 
-  // Stats Card Calculations
-  const totalPaidSum = payments.filter(p => p.status === "paid").reduce((sum, p) => sum + p.amount, 0);
-  const totalDuesSum = payments.filter(p => p.status === "pending").reduce((sum, p) => sum + p.amount, 0);
-
   // Timeline Event Config
-  const timelineConfig: Record<string, { label: string; icon: any; color: string }> = {
-    registration: { label: "Registered", icon: User, color: "bg-blue-50 text-blue-700 border border-blue-100" },
-    visit: { label: "Consultation visit", icon: Stethoscope, color: "bg-emerald-50 text-emerald-700 border border-emerald-100" },
-    file_upload: { label: "File uploaded", icon: FileText, color: "bg-purple-50 text-purple-700 border border-purple-100" },
-    op_renewal: { label: "OP Renewal log", icon: RotateCw, color: "bg-amber-50 text-amber-700 border border-amber-100" },
-    payment: { label: "Payment ledger", icon: DollarSign, color: "bg-teal-50 text-teal-700 border border-teal-100" },
-    appointment: { label: "Appointment scheduled", icon: Clock, color: "bg-indigo-50 text-indigo-700 border border-indigo-100" },
-    notification: { label: "Alert dispatched", icon: Activity, color: "bg-rose-50 text-rose-700 border border-rose-100" }
+  const timelineConfig: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+    registration: { label: "Registered", icon: UserPlus, color: "bg-blue-50 text-blue-700 border border-blue-100" },
+    visit: { label: "Visit Logged", icon: Stethoscope, color: "bg-emerald-50 text-[#10B981] border border-emerald-100" },
+    file_upload: { label: "Document Upload", icon: FileText, color: "bg-purple-50 text-purple-700 border border-purple-100" },
+    op_renewal: { label: "OP Renewal", icon: RotateCw, color: "bg-amber-50 text-amber-700 border border-amber-100" },
   };
 
   // Files categories
   const categorizedFiles = {
     prescriptions: files.filter(f => f.type === "prescription"),
-    reports: files.filter(f => f.type === "report"),
-    scans: files.filter(f => f.type === "scan"),
-    xrays: files.filter(f => f.type === "xray"),
+    previous_records: files.filter(f => f.type === "previous_record"),
+    external_reports: files.filter(f => f.type === "external_report"),
   };
+
+  const opRenewalLogsCount = logs.filter(l => l.type === "op_renewal").length;
 
   const initials = patient.name.charAt(0).toUpperCase();
 
@@ -294,7 +253,7 @@ export default function PatientProfilePage() {
             <div className="flex items-center gap-2">
               <h1 className="text-base font-extrabold text-gray-900 leading-snug truncate">{patient.name}</h1>
               <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200/50 px-1.5 py-0.5 rounded leading-none shrink-0">
-                {patient.file_no}
+                {patient.file_number}
               </span>
             </div>
             <p className="text-xs text-gray-400 truncate mt-0.5">
@@ -307,7 +266,7 @@ export default function PatientProfilePage() {
         <div className="flex items-center gap-2.5 flex-wrap shrink-0">
           <button
             onClick={() => setIsVisitOpen(true)}
-            className="flex items-center gap-1 h-9 px-3 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1 h-9 px-3.5 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-sm"
           >
             <Plus size={13} />
             <span>+ Visit</span>
@@ -315,33 +274,33 @@ export default function PatientProfilePage() {
           
           <button
             onClick={() => setIsFileOpen(true)}
-            className="flex items-center gap-1 h-9 px-3 rounded-full border border-[#E6EFEA] bg-white hover:bg-gray-50 text-gray-600 text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1 h-9 px-3.5 rounded-full border border-[#E6EFEA] bg-white hover:bg-gray-50 text-gray-600 text-xs font-bold transition-all shadow-sm"
           >
             <Plus size={13} />
-            <span>+ Upload</span>
-          </button>
-
-          <button
-            onClick={() => setIsPaymentOpen(true)}
-            className="flex items-center gap-1 h-9 px-3 rounded-full border border-emerald-100 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-emerald-800 text-xs font-bold transition-all shadow-sm"
-          >
-            <Plus size={13} />
-            <span>+ Payment</span>
+            <span>+ Upload File</span>
           </button>
 
           <button
             onClick={() => setIsRenewOpen(true)}
-            className="flex items-center gap-1 h-9 px-3 rounded-full border border-[#E6EFEA] bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold transition-all"
+            className="flex items-center gap-1 h-9 px-3.5 rounded-full border border-emerald-100 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-emerald-800 text-xs font-bold transition-all shadow-sm"
           >
             <RotateCw size={12} />
             <span>Renew OP</span>
+          </button>
+
+          <button
+            onClick={handleDeletePatient}
+            className="flex items-center justify-center w-9 h-9 rounded-full border border-red-100 bg-red-50/50 hover:bg-red-50 text-red-500 hover:text-red-700 transition-all"
+            title="Delete Patient Record"
+          >
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
       {/* Notion style Navigation Tabs */}
       <div className="flex border-b border-[#E6EFEA] -mx-6 px-6 pb-px overflow-x-auto gap-2.5">
-        {(["overview", "timeline", "visits", "files", "payments", "settings"] as TabType[]).map((tab) => (
+        {(["overview", "visits", "files", "timeline"] as TabType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -363,80 +322,73 @@ export default function PatientProfilePage() {
         <div className="space-y-6 animate-fade-in">
           {/* Top Panel Grid */}
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Summary details card */}
+            {/* Patient card details */}
             <div className="md:col-span-1 bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm space-y-4">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Clinical Metadata</h3>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Patient Card</h3>
               <div className="space-y-3">
-                <div className="flex justify-between text-xs py-1.5 border-b border-gray-50">
-                  <span className="text-gray-400">Phone Number</span>
-                  <strong className="text-gray-700 font-semibold">+91 {patient.phone}</strong>
+                <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Name</span>
+                  <strong className="text-gray-900 font-bold">{patient.name}</strong>
                 </div>
-                <div className="flex justify-between text-xs py-1.5 border-b border-gray-50">
-                  <span className="text-gray-400">Age / Gender</span>
-                  <strong className="text-gray-700 font-semibold">{patient.age}y / {patient.gender}</strong>
+                <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">File Number</span>
+                  <strong className="text-gray-700 font-bold bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200/50 text-[10px]">{patient.file_number}</strong>
                 </div>
-                <div className="flex justify-between text-xs py-1.5 border-b border-gray-50">
-                  <span className="text-gray-400">Blood Group</span>
-                  <strong className="text-gray-700 font-semibold">{patient.blood_group}</strong>
+                <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Age / Gender</span>
+                  <strong className="text-gray-700 font-bold">{patient.age} yrs / {patient.gender}</strong>
                 </div>
-                <div className="flex justify-between text-xs py-1.5 border-b border-gray-50">
-                  <span className="text-gray-400">Diagnosis</span>
-                  <strong className="text-[#10B981] font-bold">{patient.disease}</strong>
+                <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Phone</span>
+                  <strong className="text-gray-700 font-bold">+91 {patient.phone}</strong>
+                </div>
+                <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                  <span className="text-gray-400 font-medium">Primary Complaint</span>
+                  <strong className="text-[#10B981] font-bold text-right max-w-[160px] truncate" title={patient.disease}>{patient.disease}</strong>
                 </div>
                 {opRecord && (
-                  <div className="flex justify-between text-xs py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">OP Expiration</span>
-                    <strong className="text-gray-700 font-semibold">{opRecord.expiry_date}</strong>
+                  <div className="flex justify-between text-xs py-2 border-b border-gray-50">
+                    <span className="text-gray-400 font-medium">OP Expiration</span>
+                    <strong className="text-gray-700 font-bold">{opRecord.expiry_date}</strong>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Stats grid */}
-            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+            <div className="md:col-span-2 grid grid-cols-3 gap-4">
               {/* Visits */}
-              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5.5 shadow-sm flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Consultation Visits</span>
-                <div className="mt-3.5 flex items-baseline gap-2">
+              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Visits</span>
+                <div className="mt-3.5">
                   <p className="text-3xl font-extrabold text-gray-900 leading-none">{visits.length}</p>
-                  <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Visits logged</span>
+                  <span className="text-[10px] font-bold text-[#10B981] mt-2 block">Consultations</span>
                 </div>
               </div>
 
               {/* Files */}
-              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5.5 shadow-sm flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Medical Files</span>
-                <div className="mt-3.5 flex items-baseline gap-2">
+              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Uploaded Files</span>
+                <div className="mt-3.5">
                   <p className="text-3xl font-extrabold text-gray-900 leading-none">{files.length}</p>
-                  <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">Files registered</span>
+                  <span className="text-[10px] font-bold text-purple-600 mt-2 block">Records stored</span>
                 </div>
               </div>
 
-              {/* Payments Paid */}
-              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5.5 shadow-sm flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Fees Paid</span>
-                <div className="mt-3.5 flex items-baseline gap-2">
-                  <p className="text-2xl font-extrabold text-gray-900 leading-none">₹{totalPaidSum.toLocaleString("en-IN")}</p>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-[#E8F5E9] px-2 py-0.5 rounded-full">Collected</span>
-                </div>
-              </div>
-
-              {/* Dues Pending */}
-              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5.5 shadow-sm flex flex-col justify-between">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Dues Pending</span>
-                <div className="mt-3.5 flex items-baseline gap-2">
-                  <p className="text-2xl font-extrabold text-gray-900 leading-none">₹{totalDuesSum.toLocaleString("en-IN")}</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${totalDuesSum > 0 ? "bg-rose-50 text-rose-600 border border-rose-100" : "bg-gray-100 text-gray-400"}`}>
-                    {totalDuesSum > 0 ? "Owed" : "Cleared"}
-                  </span>
+              {/* OP Renewals */}
+              <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">OP Renewals</span>
+                <div className="mt-3.5">
+                  <p className="text-3xl font-extrabold text-gray-900 leading-none">{opRenewalLogsCount}</p>
+                  <span className="text-[10px] font-bold text-amber-600 mt-2 block">Extensions logged</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Recent Timeline Section (Last 5 events) */}
-          <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6.5 shadow-sm space-y-5">
-            <h3 className="text-sm font-bold text-gray-900">Recent Profile Activity</h3>
+          <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6 shadow-sm space-y-5">
+            <h3 className="text-sm font-bold text-gray-900">Recent Activity Timeline</h3>
             
             {logs.length === 0 ? (
               <p className="text-xs text-gray-400 font-medium py-4 text-center">No timeline activity registered yet.</p>
@@ -444,7 +396,6 @@ export default function PatientProfilePage() {
               <div className="relative pl-5.5 space-y-6 border-l border-emerald-100 ml-2.5">
                 {logs.slice(0, 5).map((log) => {
                   const cfg = timelineConfig[log.type] || { label: "Event", icon: Activity, color: "bg-gray-50 text-gray-600" };
-                  const Icon = cfg.icon;
                   return (
                     <div key={log.id} className="relative group flex items-start gap-4">
                       {/* marker dot */}
@@ -470,64 +421,20 @@ export default function PatientProfilePage() {
         </div>
       )}
 
-      {/* 2. TIMELINE TAB (Unified Full feed) */}
-      {activeTab === "timeline" && (
-        <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6.5 shadow-sm space-y-6 animate-fade-in">
-          <div>
-            <h2 className="text-[15px] font-bold text-gray-900">Clinical Audit Feed</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Comprehensive profile activity timeline</p>
-          </div>
-
-          {logs.length === 0 ? (
-            <div className="py-12 text-center text-xs text-gray-400 font-bold">
-              No audit logs captured.
-            </div>
-          ) : (
-            <div className="relative pl-6 space-y-8 border-l border-emerald-100 ml-3.5">
-              {logs.map((log) => {
-                const cfg = timelineConfig[log.type] || { label: "Event", icon: Activity, color: "bg-gray-50 text-gray-600" };
-                const Icon = cfg.icon;
-                return (
-                  <div key={log.id} className="relative group flex items-start gap-4">
-                    {/* marker dot */}
-                    <div className="absolute -left-[32px] top-1 w-4 h-4 rounded-full bg-white border-4 border-[#10B981] flex-shrink-0" />
-                    
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[9px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-md ${cfg.color}`}>
-                          {cfg.label}
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-semibold">
-                          {new Date(log.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
-                      
-                      <div className="bg-[#F8FAF9]/80 border border-[#E6EFEA]/60 p-3.5 rounded-2xl">
-                        <p className="text-xs font-semibold text-gray-700">{log.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 3. VISITS TAB (Detailed Table) */}
+      {/* 2. VISITS TAB */}
       {activeTab === "visits" && (
         <div className="bg-white rounded-[24px] border border-[#E6EFEA] shadow-sm overflow-hidden animate-fade-in">
           <div className="px-6 py-4.5 border-b border-[#E6EFEA] flex items-center justify-between">
             <div>
-              <h2 className="text-[15px] font-bold text-gray-900">Physician Consultations</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Visits history ledger</p>
+              <h2 className="text-[15px] font-bold text-gray-900">Chief Consultations</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Visits progression and notes history</p>
             </div>
             <button
               onClick={() => setIsVisitOpen(true)}
               className="flex items-center gap-1 h-9 px-3.5 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm"
             >
               <Plus size={13} />
-              <span>Record Consultation</span>
+              <span>Record Visit</span>
             </button>
           </div>
 
@@ -541,6 +448,7 @@ export default function PatientProfilePage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-[#E6EFEA] text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                    <th className="px-6 py-3.5 font-bold">Visit #</th>
                     <th className="px-6 py-3.5 font-bold">Date</th>
                     <th className="px-6 py-3.5 font-bold">Doctor</th>
                     <th className="px-6 py-3.5 font-bold">Chief Complaint</th>
@@ -551,12 +459,15 @@ export default function PatientProfilePage() {
                 <tbody className="divide-y divide-[#E6EFEA] text-xs text-gray-600 font-medium">
                   {visits.map((v) => (
                     <tr key={v.id} className="hover:bg-gray-50/20">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-extrabold">
+                        Visit #{v.visit_number}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                         {new Date(v.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-800">{v.doctor}</td>
                       <td className="px-6 py-4">{v.complaint || "Routine follow-up"}</td>
-                      <td className="px-6 py-4 text-emerald-800 font-semibold">{v.diagnosis || "Under evaluation"}</td>
+                      <td className="px-6 py-4 text-[#10B981] font-semibold">{v.diagnosis || "Under evaluation"}</td>
                       <td className="px-6 py-4 max-w-[280px] break-words">{v.notes}</td>
                     </tr>
                   ))}
@@ -567,14 +478,14 @@ export default function PatientProfilePage() {
         </div>
       )}
 
-      {/* 4. FILES TAB (Categorized Grid) */}
+      {/* 3. FILES TAB */}
       {activeTab === "files" && (
         <div className="space-y-6 animate-fade-in">
-          {/* Upload Dropzone Header */}
+          {/* Upload dropzone block */}
           <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6 shadow-sm flex flex-col items-center justify-center text-center border-dashed border-2 border-[#10B981]/30">
             <FileText size={32} className="text-gray-300 mb-2" />
-            <span className="block text-xs font-bold text-gray-700 leading-snug">Drop patient files here</span>
-            <span className="block text-[11px] text-gray-400 mt-1">prescriptions, scans, ECGs, blood reports</span>
+            <span className="block text-xs font-bold text-gray-700 leading-snug">Drag and drop patient files here</span>
+            <span className="block text-[11px] text-gray-400 mt-1">prescriptions, past records, or external reports</span>
             <button
               onClick={() => setIsFileOpen(true)}
               className="mt-3.5 h-8.5 px-4 rounded-full bg-[#10B981]/10 hover:bg-[#10B981]/25 text-[#10B981] text-xs font-bold transition-all"
@@ -583,20 +494,24 @@ export default function PatientProfilePage() {
             </button>
           </div>
 
-          {/* Folder Categories */}
-          {(["prescriptions", "reports", "scans", "xrays"] as const).map((cat) => {
-            const list = categorizedFiles[cat];
+          {/* Folders */}
+          {([
+            { key: "prescriptions", label: "Prescriptions Folder", type: "prescription" },
+            { key: "previous_records", label: "Previous Records Folder", type: "previous_record" },
+            { key: "external_reports", label: "External Reports Folder", type: "external_report" }
+          ] as const).map((cat) => {
+            const list = categorizedFiles[cat.key];
             return (
-              <div key={cat} className="bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm space-y-4">
+              <div key={cat.key} className="bg-white rounded-[24px] border border-[#E6EFEA] p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between pb-2.5 border-b border-gray-50">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider capitalize">{cat}</h3>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{cat.label}</h3>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                     {list.length} item(s)
                   </span>
                 </div>
 
                 {list.length === 0 ? (
-                  <p className="text-[11px] text-gray-400 font-medium py-3">No documents uploaded under this category.</p>
+                  <p className="text-[11px] text-gray-400 font-medium py-3">No files uploaded in this folder.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {list.map((file) => (
@@ -611,7 +526,7 @@ export default function PatientProfilePage() {
                             alt={file.name}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                           />
-                          <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                          <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button
                               onClick={() => setPreviewFile(file)}
                               className="w-7 h-7 rounded-lg bg-white/90 shadow flex items-center justify-center text-gray-700 hover:text-[#10B981] transition-colors"
@@ -640,111 +555,46 @@ export default function PatientProfilePage() {
         </div>
       )}
 
-      {/* 5. PAYMENTS TAB (UPI/Cash/Card Ledger) */}
-      {activeTab === "payments" && (
-        <div className="bg-white rounded-[24px] border border-[#E6EFEA] shadow-sm overflow-hidden animate-fade-in">
-          <div className="px-6 py-4.5 border-b border-[#E6EFEA] flex items-center justify-between">
-            <div>
-              <h2 className="text-[15px] font-bold text-gray-900">Billing History</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Consultation dues ledger log</p>
-            </div>
-            
-            <button
-              onClick={() => setIsPaymentOpen(true)}
-              className="flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm"
-            >
-              <Plus size={13} />
-              <span>Record Fee Receipt</span>
-            </button>
+      {/* 4. TIMELINE TAB */}
+      {activeTab === "timeline" && (
+        <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6.5 shadow-sm space-y-6 animate-fade-in">
+          <div>
+            <h2 className="text-[15px] font-bold text-gray-900">Case Audit Timeline</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Unified patient clinical timeline</p>
           </div>
 
-          <div className="grid grid-cols-2 border-b border-[#E6EFEA] bg-gray-50/30 text-center py-4 divide-x divide-gray-100">
-            <div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Fees Collected</span>
-              <span className="text-lg font-bold text-emerald-600 mt-1 block">₹{totalPaidSum}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Dues Pending</span>
-              <span className="text-lg font-bold text-rose-600 mt-1 block">₹{totalDuesSum}</span>
-            </div>
-          </div>
-
-          {payments.length === 0 ? (
-            <div className="px-6 py-12 text-center text-xs text-gray-400">
-              No payments captured.
+          {logs.length === 0 ? (
+            <div className="py-12 text-center text-xs text-gray-400 font-bold">
+              No audit logs captured.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50/50 border-b border-[#E6EFEA] text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                    <th className="px-6 py-3 font-bold">Date</th>
-                    <th className="px-6 py-3 font-bold">Description</th>
-                    <th className="px-6 py-3 font-bold">Payment Mode</th>
-                    <th className="px-6 py-3 font-bold">Status</th>
-                    <th className="px-6 py-3 text-right font-bold">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E6EFEA] text-xs text-gray-600 font-medium">
-                  {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50/20">
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                        {p.date}
-                      </td>
-                      <td className="px-6 py-4">{p.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap uppercase text-gray-500 font-semibold">{p.payment_mode || "UPI"}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-[9px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full border ${p.status === "paid" ? "badge-mint-active" : "badge-mint-expired"}`}>
-                          {p.status}
+            <div className="relative pl-6 space-y-8 border-l border-emerald-100 ml-3.5">
+              {logs.map((log) => {
+                const cfg = timelineConfig[log.type] || { label: "Event", icon: Activity, color: "bg-gray-50 text-gray-600" };
+                return (
+                  <div key={log.id} className="relative group flex items-start gap-4">
+                    {/* marker dot */}
+                    <div className="absolute -left-[32px] top-1 w-4 h-4 rounded-full bg-white border-4 border-[#10B981] flex-shrink-0" />
+                    
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-md ${cfg.color}`}>
+                          {cfg.label}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">₹{p.amount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <span className="text-[10px] text-gray-400 font-semibold">
+                          {new Date(log.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      
+                      <div className="bg-[#F8FAF9]/80 border border-[#E6EFEA]/60 p-3.5 rounded-2xl">
+                        <p className="text-xs font-semibold text-gray-700">{log.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* 6. SETTINGS TAB */}
-      {activeTab === "settings" && (
-        <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6.5 shadow-sm space-y-6 animate-fade-in max-w-xl">
-          <div>
-            <h2 className="text-[15px] font-bold text-gray-900">Configure File</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Manage patient administrative configurations</p>
-          </div>
-
-          <div className="space-y-4 pt-2">
-            {/* Renew OP */}
-            <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between gap-4">
-              <div>
-                <span className="block text-xs font-bold text-gray-900">Renew Medical File Term</span>
-                <span className="block text-[10px] text-gray-400 mt-0.5">Extend outpatient validity date count</span>
-              </div>
-              <button
-                onClick={() => setIsRenewOpen(true)}
-                className="h-9 px-4.5 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm"
-              >
-                Renew Validity
-              </button>
-            </div>
-
-            {/* Delete Patient */}
-            <div className="p-4 bg-red-50/30 border border-red-50 rounded-2xl flex items-center justify-between gap-4">
-              <div>
-                <span className="block text-xs font-bold text-red-800">Archive &amp; Delete File</span>
-                <span className="block text-[10px] text-red-500/70 mt-0.5">Permanently remove this medical registry record</span>
-              </div>
-              <button
-                onClick={handleDeletePatient}
-                className="h-9 px-4.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-sm"
-              >
-                Delete File
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
@@ -756,8 +606,8 @@ export default function PatientProfilePage() {
           <div className="w-full max-w-[480px] bg-white rounded-3xl border border-[#E6EFEA] p-6 shadow-2xl space-y-4 animate-scale-up">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
-                <h3 className="text-base font-bold text-gray-900">Record Consultation Visit</h3>
-                <p className="text-xs text-gray-400">Save clinical diagnosis details</p>
+                <h3 className="text-base font-bold text-gray-900">Record Case Visit</h3>
+                <p className="text-xs text-gray-400">Save clinical progression diagnosis</p>
               </div>
               <button
                 onClick={() => setIsVisitOpen(false)}
@@ -781,8 +631,6 @@ export default function PatientProfilePage() {
                     <option value="consultation">Consultation</option>
                     <option value="follow-up">Follow-Up</option>
                     <option value="blood-report">Blood Test</option>
-                    <option value="xray">X-Ray Scan</option>
-                    <option value="scan">CT/MRI Scan</option>
                     <option value="procedure">Procedure</option>
                   </select>
                 </div>
@@ -803,7 +651,7 @@ export default function PatientProfilePage() {
                   type="text"
                   value={vComplaint}
                   onChange={(e) => setVComplaint(e.target.value)}
-                  placeholder="e.g. Chronic cough for 3 weeks"
+                  placeholder="e.g. Rheumatic joint pain, symptoms worsen at night"
                   className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400"
                 />
               </div>
@@ -814,17 +662,17 @@ export default function PatientProfilePage() {
                   type="text"
                   value={vDiagnosis}
                   onChange={(e) => setVDiagnosis(e.target.value)}
-                  placeholder="e.g. Bronchial Asthma"
+                  placeholder="e.g. Chronic Arthritis progression"
                   className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Clinical Notes &amp; Prescription *</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Clinical Notes &amp; Advice *</label>
                 <textarea
                   value={vNotes}
                   onChange={(e) => setVNotes(e.target.value)}
-                  placeholder="Prescription dose advice..."
+                  placeholder="e.g. Prescribed Rhus Tox 200C - 4 drops twice daily for 7 days."
                   rows={3}
                   className="w-full p-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400 resize-none"
                 />
@@ -843,7 +691,7 @@ export default function PatientProfilePage() {
                   className="flex-1 h-11 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold flex items-center justify-center gap-1 shadow-md shadow-emerald-50"
                 >
                   <Plus size={14} />
-                  <span>Add Log</span>
+                  <span>Save Visit</span>
                 </button>
               </div>
             </form>
@@ -857,7 +705,7 @@ export default function PatientProfilePage() {
           <div className="w-full max-w-[440px] bg-white rounded-3xl border border-[#E6EFEA] p-6 shadow-2xl space-y-4 animate-scale-up">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
-                <h3 className="text-base font-bold text-gray-900">Upload Document Metadata</h3>
+                <h3 className="text-base font-bold text-gray-900">Upload Case File</h3>
                 <p className="text-xs text-gray-400">Pointers to clinical documents</p>
               </div>
               <button
@@ -877,23 +725,22 @@ export default function PatientProfilePage() {
                   type="text"
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
-                  placeholder="e.g. Blood Test Page 1"
+                  placeholder="e.g. Previous Prescription June 2024"
                   className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category *</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category Folder *</label>
                   <select
                     value={fileType}
-                    onChange={(e) => setFileType(e.target.value as any)}
+                    onChange={(e) => setFileType(e.target.value as FileType)}
                     className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white"
                   >
                     <option value="prescription">Prescription</option>
-                    <option value="report">Blood Report</option>
-                    <option value="scan">ECG / MRI Scan</option>
-                    <option value="xray">X-Ray Plate</option>
+                    <option value="previous_record">Previous Record</option>
+                    <option value="external_report">External Report</option>
                   </select>
                 </div>
                 <div>
@@ -906,7 +753,6 @@ export default function PatientProfilePage() {
                     <option value="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&auto=format&fit=crop&q=60">Prescription Sheet</option>
                     <option value="https://images.unsplash.com/photo-1579684389782-64d84b5e901a?w=600&auto=format&fit=crop&q=60">Laboratory Report</option>
                     <option value="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=600&auto=format&fit=crop&q=60">Radiology X-Ray</option>
-                    <option value="https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?w=600&auto=format&fit=crop&q=60">ECG Scans</option>
                   </select>
                 </div>
               </div>
@@ -924,96 +770,7 @@ export default function PatientProfilePage() {
                   className="flex-1 h-11 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold flex items-center justify-center gap-1 shadow-md shadow-emerald-50"
                 >
                   <Plus size={14} />
-                  <span>Upload</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Add Payment Dialog Modal */}
-      {isPaymentOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-[440px] bg-white rounded-3xl border border-[#E6EFEA] p-6 shadow-2xl space-y-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div>
-                <h3 className="text-base font-bold text-gray-900">Record Fee Payment</h3>
-                <p className="text-xs text-gray-400">Save billing transaction receipt</p>
-              </div>
-              <button
-                onClick={() => setIsPaymentOpen(false)}
-                className="w-8 h-8 rounded-xl border border-gray-100 flex items-center justify-center hover:bg-gray-50 text-gray-400"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
-              {pError && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold">{pError}</div>}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Amount (₹) *</label>
-                  <input
-                    type="number"
-                    value={pAmount}
-                    onChange={(e) => setPAmount(e.target.value)}
-                    placeholder="e.g. 500"
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Receipt Status *</label>
-                  <select
-                    value={pStatus}
-                    onChange={(e) => setPStatus(e.target.value as any)}
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white"
-                  >
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Mode *</label>
-                  <select
-                    value={pMode}
-                    onChange={(e) => setPMode(e.target.value as any)}
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white"
-                  >
-                    <option value="upi">UPI (GPay/PhonePe)</option>
-                    <option value="cash">Cash In Hand</option>
-                    <option value="card">Card Swipe</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description *</label>
-                  <input
-                    type="text"
-                    value={pDesc}
-                    onChange={(e) => setPDesc(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPaymentOpen(false)}
-                  className="flex-1 h-11 rounded-full border border-gray-200 text-gray-600 text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 h-11 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold flex items-center justify-center gap-1 shadow-md shadow-emerald-50"
-                >
-                  <Plus size={14} />
-                  <span>Add Receipt</span>
+                  <span>Upload File</span>
                 </button>
               </div>
             </form>
@@ -1028,7 +785,7 @@ export default function PatientProfilePage() {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
                 <h3 className="text-base font-bold text-gray-900">Renew OP Validity</h3>
-                <p className="text-xs text-gray-400">Extend outpatient validity term</p>
+                <p className="text-xs text-gray-400">Extend patient outpatient case validity term</p>
               </div>
               <button
                 onClick={() => setIsRenewOpen(false)}
@@ -1068,7 +825,7 @@ export default function PatientProfilePage() {
                   className="flex-1 h-11 rounded-full bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-50"
                 >
                   <RotateCw size={13} />
-                  <span>Renew File</span>
+                  <span>Renew Case</span>
                 </button>
               </div>
             </form>

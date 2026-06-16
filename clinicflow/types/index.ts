@@ -1,19 +1,15 @@
 export type Gender = "male" | "female" | "other";
-export type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
-export type VisitType = "consultation" | "follow-up" | "blood-report" | "xray" | "scan" | "procedure";
-export type FileType = "prescription" | "blood_report" | "xray" | "scan" | "other";
-export type PaymentStatus = "paid" | "pending" | "partial";
+export type VisitType = "consultation" | "follow-up" | "blood-report" | "procedure";
+export type FileType = "prescription" | "previous_record" | "external_report";
 export type OPStatus = "active" | "expiring" | "expired";
 
 export interface Patient {
   id: string;
-  file_no: string;
+  file_number: string;
   name: string;
   age: number;
   gender: Gender;
   phone: string;
-  address: string;
-  blood_group: BloodGroup;
   disease: string;
   notes: string;
   tags: string[];
@@ -22,9 +18,28 @@ export interface Patient {
   avatar_url?: string;
 }
 
+export interface Doctor {
+  id: string;
+  name: string;
+  phone: string;
+  specialization: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  phone: string;
+  role: "doctor" | "receptionist" | "admin";
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface Visit {
   id: string;
   patient_id: string;
+  visit_number: number;
   date: string;
   type: VisitType;
   notes: string;
@@ -38,7 +53,7 @@ export interface MedicalFile {
   id: string;
   patient_id: string;
   name: string;
-  type: "prescription" | "report" | "scan" | "xray";
+  type: FileType;
   uploaded_at: string;
   preview_url: string;
 }
@@ -52,22 +67,11 @@ export interface OPRecord {
   status: OPStatus;
 }
 
-export interface Payment {
-  id: string;
-  patient_id: string;
-  visit_id: string;
-  amount: number;
-  status: PaymentStatus;
-  date: string;
-  description: string;
-  payment_mode?: "upi" | "cash" | "card";
-}
-
 export interface Appointment {
   id: string;
   patient_id: string;
   patient_name: string;
-  file_no: string;
+  file_number: string;
   date: string;
   time: string;
   type: VisitType;
@@ -80,8 +84,6 @@ export interface DashboardStats {
   today_patients: number;
   today_appointments: number;
   expiring_ops: number;
-  monthly_revenue: number;
-  pending_payments: number;
 }
 
 export interface UserSession {
@@ -95,7 +97,7 @@ export interface Notification {
   patient_id: string;
   patient_name: string;
   patient_phone: string;
-  type: "op_expiry" | "appointment" | "token" | "report";
+  type: "op_expiry" | "appointment" | "report";
   message: string;
   status: "pending" | "sent" | "failed";
   scheduled_at: string;
@@ -105,8 +107,9 @@ export interface Notification {
 export interface ActivityLog {
   id: string;
   patient_id: string;
-  type: "registration" | "visit" | "file_upload" | "op_renewal" | "payment" | "appointment" | "notification";
+  type: "registration" | "visit" | "file_upload" | "op_renewal";
   description: string;
   date: string;
 }
+
 

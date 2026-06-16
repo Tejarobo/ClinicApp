@@ -6,10 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  CalendarDays,
-  CreditCard,
-  Bell,
-  Settings,
+  Stethoscope,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -18,10 +15,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/patients", icon: Users },
-  { label: "Appointments", href: "/appointments", icon: CalendarDays },
-  { label: "Payments", href: "/payments", icon: CreditCard },
-  { label: "Notifications", href: "/notifications", icon: Bell },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Doctors", href: "/doctors", icon: Stethoscope },
 ];
 
 export default function Sidebar() {

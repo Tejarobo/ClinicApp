@@ -22,7 +22,7 @@ import {
 import type { Notification } from "@/types";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(() => getStoredNotifications());
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "sent" | "failed">("all");
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<string | null>(null);
@@ -32,8 +32,6 @@ export default function NotificationsPage() {
   }
 
   useEffect(() => {
-    loadData();
-    // Poll data occasionally for reactive updates
     const interval = setInterval(loadData, 2000);
     return () => clearInterval(interval);
   }, []);

@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { User, Bell, Shield, Sparkles, Check } from "lucide-react";
 
 export default function SettingsPage() {
-  const [session, setSession] = useState<{ name: string; role: string; phone: string } | null>(null);
+  const [session] = useState<{ name: string; role: string; phone: string } | null>(() => {
+    const val = localStorage.getItem("cf_session");
+    return val ? JSON.parse(val) : null;
+  });
   
   // Settings values
   const [clinicName, setClinicName] = useState("Dr. Arjun Mehta's Clinic");
@@ -13,13 +16,6 @@ export default function SettingsPage() {
   const [channelSms, setChannelSms] = useState(true);
 
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const val = localStorage.getItem("cf_session");
-    if (val) {
-      setSession(JSON.parse(val));
-    }
-  }, []);
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();

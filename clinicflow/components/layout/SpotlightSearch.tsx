@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Search, Clock, Users, ArrowRight, UserCheck, AlertTriangle, FileText, IndianRupee } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Clock, Users, ArrowRight, FileText, CalendarDays } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getStoredPatients, getStoredOPRecords, getStoredPayments, getStoredMedicalFiles } from "@/lib/mock-data";
-import type { Patient, OPRecord, Payment, MedicalFile } from "@/types";
+import { getStoredPatients, getStoredOPRecords, getStoredMedicalFiles } from "@/lib/mock-data";
+import type { Patient, OPRecord } from "@/types";
 
 interface SpotlightSearchProps {
   isOpen: boolean;
@@ -19,6 +19,17 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectPatient = useCallback((id: string) => {
+    const recents = recentIds.filter(rId => rId !== id);
+    recents.unshift(id);
+    const updated = recents.slice(0, 5);
+    localStorage.setItem("cf_recent_searches", JSON.stringify(updated));
+    setRecentIds(updated);
+
+    onClose();
+    router.push(`/patients/${id}`);
+  }, [recentIds, onClose, router]);
 
   // Load recent searches on open
   useEffect(() => {
@@ -37,7 +48,6 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
   useEffect(() => {
     const patients = getStoredPatients();
     if (!query.trim()) {
-      // If no query, list recent patients or default suggestions
       const recentPatients = recentIds
         .map(id => patients.find(p => p.id === id))
         .filter((p): p is Patient => !!p);
@@ -47,7 +57,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
       const filtered = patients.filter(
         p =>
           p.name.toLowerCase().includes(q) ||
-          p.file_no.toLowerCase().includes(q) ||
+          p.file_number.toLowerCase().includes(q) ||
           p.phone.includes(q)
       );
       setResults(filtered);
@@ -79,61 +89,41 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, results, activeIndex]);
+  }, [isOpen, results, activeIndex, handleSelectPatient, onClose]);
 
   // Global keybind Listener (Cmd+K or Ctrl+K)
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        if (isOpen) onClose();
-        else onClose(); // parent handles toggle, we just trigger close/open via callbacks
+        onClose();
       }
     }
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [isOpen, onClose]);
 
-  function handleSelectPatient(id: string) {
-    // Save to recents
-    const recents = recentIds.filter(rId => rId !== id);
-    recents.unshift(id);
-    const updated = recents.slice(0, 5);
-    localStorage.setItem("cf_recent_searches", JSON.stringify(updated));
-    setRecentIds(updated);
-
-    onClose();
-    router.push(`/patients/${id}`);
-  }
-
   if (!isOpen) return null;
 
-  // Selected Patient Details for Preview Panel (Right Column)
   const selectedPatient = results[activeIndex];
   let opStatus: OPRecord | undefined;
   let filesCount = 0;
-  let duesSum = 0;
 
   if (selectedPatient) {
     opStatus = getStoredOPRecords().find(o => o.patient_id === selectedPatient.id);
     filesCount = getStoredMedicalFiles().filter(f => f.patient_id === selectedPatient.id).length;
-    duesSum = getStoredPayments()
-      .filter(p => p.patient_id === selectedPatient.id && p.status === "pending")
-      .reduce((sum, p) => sum + p.amount, 0);
   }
 
   const opStatusBadge: Record<string, string> = {
     active: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    expiring: "bg-amber-50 text-amber-700 border border-amber-100 animate-pulse",
+    expiring: "bg-amber-50 text-amber-700 border border-amber-100",
     expired: "bg-rose-50 text-rose-700 border border-rose-100",
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#1A2E26]/20 backdrop-blur-[4px] flex items-start justify-center pt-[12vh] p-4 font-sans">
-      {/* Backdrop Click */}
       <div className="absolute inset-0 -z-10" onClick={onClose} />
 
-      {/* Main command modal */}
       <div className="w-full max-w-[620px] bg-white rounded-[24px] border border-[#E6EFEA] shadow-2xl overflow-hidden flex flex-col h-[400px] animate-scale-up">
         {/* Search input bar */}
         <div className="flex items-center gap-3 h-14 border-b border-[#E6EFEA] px-4 shrink-0 bg-gray-50/50">
@@ -141,7 +131,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search name, file number, phone..."
+            placeholder="Search custom file number, name, phone..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder-gray-400"
@@ -186,7 +176,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
                       <span className="text-xs font-semibold truncate leading-none">{patient.name}</span>
                     </div>
                     <span className="text-[10px] font-bold bg-gray-100 border border-gray-200/50 px-1.5 py-0.5 rounded text-gray-400">
-                      {patient.file_no}
+                      {patient.file_number}
                     </span>
                   </button>
                 );
@@ -198,7 +188,6 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
           <div className="w-[240px] bg-gray-50/40 p-4 shrink-0 flex flex-col justify-between overflow-y-auto">
             {selectedPatient ? (
               <div className="space-y-4 flex-1 flex flex-col justify-between">
-                {/* Details */}
                 <div className="space-y-3.5">
                   <div>
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Patient Card</span>
@@ -232,10 +221,12 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
                       <span className="flex items-center gap-1"><FileText size={12}/> Medical Files</span>
                       <span className="font-bold text-gray-700">{filesCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium">
-                      <span className="flex items-center gap-1"><IndianRupee size={12}/> Dues Pending</span>
-                      <span className={`font-bold ${duesSum > 0 ? "text-red-500" : "text-gray-700"}`}>₹{duesSum}</span>
-                    </div>
+                    {opStatus && (
+                      <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+                        <span className="flex items-center gap-1"><CalendarDays size={12}/> OP Expiration</span>
+                        <span className="font-bold text-gray-700 truncate">{opStatus.expiry_date}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -250,7 +241,7 @@ export default function SpotlightSearch({ isOpen, onClose }: SpotlightSearchProp
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 p-4">
                 <Users size={24} className="text-gray-300 mb-1.5" />
-                <p className="text-[10px] font-medium leading-normal">Highlight a patient record to view their medical profile card here</p>
+                <p className="text-[10px] font-medium leading-normal">Highlight a patient record to view their profile preview card here</p>
               </div>
             )}
           </div>
