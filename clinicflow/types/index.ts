@@ -29,17 +29,18 @@ export interface Visit {
   type: VisitType;
   notes: string;
   doctor: string;
+  complaint?: string;
+  diagnosis?: string;
   files?: MedicalFile[];
 }
 
 export interface MedicalFile {
   id: string;
   patient_id: string;
-  visit_id: string;
-  image_url: string;
-  type: FileType;
-  date: string;
   name: string;
+  type: "prescription" | "report" | "scan" | "xray";
+  uploaded_at: string;
+  preview_url: string;
 }
 
 export interface OPRecord {
@@ -59,6 +60,7 @@ export interface Payment {
   status: PaymentStatus;
   date: string;
   description: string;
+  payment_mode?: "upi" | "cash" | "card";
 }
 
 export interface Appointment {
@@ -98,5 +100,13 @@ export interface Notification {
   status: "pending" | "sent" | "failed";
   scheduled_at: string;
   sent_at?: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  patient_id: string;
+  type: "registration" | "visit" | "file_upload" | "op_renewal" | "payment" | "appointment" | "notification";
+  description: string;
+  date: string;
 }
 

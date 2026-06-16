@@ -1,4 +1,4 @@
-import type { Patient, Visit, OPRecord, Payment, Appointment, DashboardStats, Notification } from "@/types";
+import type { Patient, Visit, OPRecord, Payment, Appointment, DashboardStats, Notification, MedicalFile, ActivityLog } from "@/types";
 
 export const mockPatients: Patient[] = [
   {
@@ -360,6 +360,101 @@ export const defaultNotifications: Notification[] = [
   }
 ];
 
+// Default Medical Files
+export const defaultMedicalFiles: MedicalFile[] = [
+  {
+    id: "f1",
+    patient_id: "p1",
+    name: "Metformin Prescription Jan.pdf",
+    type: "prescription",
+    uploaded_at: "2025-01-05T10:15:00Z",
+    preview_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f2",
+    patient_id: "p1",
+    name: "HbA1c Blood Report Feb.png",
+    type: "report",
+    uploaded_at: "2025-02-12T11:00:00Z",
+    preview_url: "https://images.unsplash.com/photo-1579684389782-64d84b5e901a?w=600&auto=format&fit=crop&q=60"
+  },
+  {
+    id: "f3",
+    patient_id: "p1",
+    name: "Chest XRay Scan.jpg",
+    type: "xray",
+    uploaded_at: "2025-03-02T10:30:00Z",
+    preview_url: "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=600&auto=format&fit=crop&q=60"
+  }
+];
+
+// Default Activity Logs (Timeline Events)
+export const defaultActivityLogs: ActivityLog[] = [
+  {
+    id: "a1",
+    patient_id: "p1",
+    type: "registration",
+    description: "Patient registered in system by Receptionist Priya Sharma",
+    date: "2024-01-05T09:00:00Z"
+  },
+  {
+    id: "a2",
+    patient_id: "p1",
+    type: "visit",
+    description: "Consultation visit with Dr. Arjun Mehta. Complaint: Polyuria and weight loss. Diagnosis: Type 2 Diabetes.",
+    date: "2025-01-05T10:00:00Z"
+  },
+  {
+    id: "a3",
+    patient_id: "p1",
+    type: "file_upload",
+    description: "Prescription file Metformin Prescription Jan.pdf uploaded",
+    date: "2025-01-05T10:15:00Z"
+  },
+  {
+    id: "a4",
+    patient_id: "p1",
+    type: "visit",
+    description: "Blood report analysis. HbA1c checked (7.8%).",
+    date: "2025-02-12T10:00:00Z"
+  },
+  {
+    id: "a5",
+    patient_id: "p1",
+    type: "file_upload",
+    description: "Report file HbA1c Blood Report Feb.png uploaded",
+    date: "2025-02-12T11:00:00Z"
+  },
+  {
+    id: "a6",
+    patient_id: "p1",
+    type: "visit",
+    description: "Follow-up visit with Dr. Arjun Mehta. Dosage increased.",
+    date: "2025-03-02T10:00:00Z"
+  },
+  {
+    id: "a7",
+    patient_id: "p1",
+    type: "file_upload",
+    description: "X-ray file Chest XRay Scan.jpg uploaded",
+    date: "2025-03-02T10:30:00Z"
+  },
+  {
+    id: "a8",
+    patient_id: "p1",
+    type: "payment",
+    description: "Consultation fee payment of ₹500 received via UPI",
+    date: "2025-04-09T10:05:00Z"
+  },
+  {
+    id: "a9",
+    patient_id: "p1",
+    type: "op_renewal",
+    description: "OP validity extended for 30 days by Admin Ramesh Kumar",
+    date: "2025-04-09T10:10:00Z"
+  }
+];
+
 // Helper to check if window is defined
 const isClient = typeof window !== "undefined";
 
@@ -460,7 +555,48 @@ export function saveNotifications(notes: Notification[]) {
   }
 }
 
+export function getStoredMedicalFiles(): MedicalFile[] {
+  if (!isClient) return defaultMedicalFiles;
+  const val = localStorage.getItem("cf_medical_files");
+  if (!val) {
+    localStorage.setItem("cf_medical_files", JSON.stringify(defaultMedicalFiles));
+    return defaultMedicalFiles;
+  }
+  return JSON.parse(val);
+}
+
+export function saveMedicalFiles(files: MedicalFile[]) {
+  if (isClient) {
+    localStorage.setItem("cf_medical_files", JSON.stringify(files));
+  }
+}
+
+export function getStoredActivityLogs(): ActivityLog[] {
+  if (!isClient) return defaultActivityLogs;
+  const val = localStorage.getItem("cf_activity_logs");
+  if (!val) {
+    localStorage.setItem("cf_activity_logs", JSON.stringify(defaultActivityLogs));
+    return defaultActivityLogs;
+  }
+  return JSON.parse(val);
+}
+
+export function saveActivityLogs(logs: ActivityLog[]) {
+  if (isClient) {
+    localStorage.setItem("cf_activity_logs", JSON.stringify(logs));
+  }
+}
+
 // CRUD actions
+export function addActivityLog(logData: Omit<ActivityLog, "id">): ActivityLog {
+  const logs = getStoredActivityLogs();
+  const id = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const newLog: ActivityLog = { ...logData, id };
+  logs.unshift(newLog);
+  saveActivityLogs(logs);
+  return newLog;
+}
+
 export function addPatient(patientData: Omit<Patient, "id" | "created_at" | "file_no"> & { validityDays?: number }): Patient {
   const patients = getStoredPatients();
   const ops = getStoredOPRecords();
@@ -501,6 +637,14 @@ export function addPatient(patientData: Omit<Patient, "id" | "created_at" | "fil
   };
   ops.unshift(newOP);
   saveOPRecords(ops);
+
+  // Log activity
+  addActivityLog({
+    patient_id: id,
+    type: "registration",
+    description: `Patient registered by Receptionist. Default OP validity set to ${validity} days.`,
+    date: new Date().toISOString()
+  });
   
   return newPatient;
 }
@@ -520,9 +664,18 @@ export function updatePatient(id: string, updates: Partial<Patient> & { validity
     if (opIdx !== -1) {
       if (updates.validityDays !== undefined) {
         ops[opIdx].validity_days = updates.validityDays;
-        const start = new Date(ops[opIdx].start_date);
+        const start = new Date();
         start.setDate(start.getDate() + updates.validityDays);
         ops[opIdx].expiry_date = start.toISOString().split("T")[0];
+        ops[opIdx].start_date = new Date().toISOString().split("T")[0];
+        
+        // Log OP renewal activity
+        addActivityLog({
+          patient_id: id,
+          type: "op_renewal",
+          description: `OP validity renewed for ${updates.validityDays} days. Status set to active.`,
+          date: new Date().toISOString()
+        });
       }
       if (updates.opStatus !== undefined) {
         ops[opIdx].status = updates.opStatus;
@@ -549,17 +702,34 @@ export function addVisit(visitData: Omit<Visit, "id">): Visit {
 
   // Auto create payment records (mock)
   const payments = getStoredPayments();
+  const amount = visitData.type === "consultation" ? 500 : 300;
   const newPay: Payment = {
     id: `pay_${Date.now()}`,
     patient_id: visitData.patient_id,
     visit_id: id,
-    amount: visitData.type === "consultation" ? 500 : 300,
+    amount,
     status: "paid",
     date: visitData.date.split("T")[0],
     description: `${visitData.type.toUpperCase()} Fee`,
+    payment_mode: "upi"
   };
   payments.unshift(newPay);
   savePayments(payments);
+
+  // Log activities
+  addActivityLog({
+    patient_id: visitData.patient_id,
+    type: "visit",
+    description: `Consultation visit logged with ${visitData.doctor}. Complaint: ${visitData.complaint || "Routine review"}. Diagnosis: ${visitData.diagnosis || "Under evaluation"}.`,
+    date: visitData.date
+  });
+
+  addActivityLog({
+    patient_id: visitData.patient_id,
+    type: "payment",
+    description: `Consultation fee of ₹${amount} received via UPI`,
+    date: visitData.date
+  });
 
   return newVisit;
 }
@@ -570,7 +740,56 @@ export function addAppointment(apptData: Omit<Appointment, "id" | "status">): Ap
   const newAppt: Appointment = { ...apptData, id, status: "scheduled" };
   appts.unshift(newAppt);
   saveAppointments(appts);
+
+  // Log activity
+  addActivityLog({
+    patient_id: apptData.patient_id,
+    type: "appointment",
+    description: `Appointment scheduled for ${apptData.date} at ${apptData.time} with ${apptData.doctor}`,
+    date: new Date().toISOString()
+  });
+
   return newAppt;
+}
+
+export function addPayment(payData: Omit<Payment, "id" | "status"> & { status: "paid" | "pending" }): Payment {
+  const payments = getStoredPayments();
+  const id = `pay_${Date.now()}`;
+  const newPay: Payment = { ...payData, id };
+  payments.unshift(newPay);
+  savePayments(payments);
+
+  // Log activity
+  addActivityLog({
+    patient_id: payData.patient_id,
+    type: "payment",
+    description: `Fee of ₹${payData.amount} registered as ${payData.status} via ${payData.payment_mode || "cash"}.`,
+    date: new Date().toISOString()
+  });
+
+  return newPay;
+}
+
+export function addMedicalFile(fileData: Omit<MedicalFile, "id" | "uploaded_at">): MedicalFile {
+  const files = getStoredMedicalFiles();
+  const id = `file_${Date.now()}`;
+  const newFile: MedicalFile = {
+    ...fileData,
+    id,
+    uploaded_at: new Date().toISOString()
+  };
+  files.unshift(newFile);
+  saveMedicalFiles(files);
+
+  // Log activity
+  addActivityLog({
+    patient_id: fileData.patient_id,
+    type: "file_upload",
+    description: `${fileData.type.toUpperCase()} file uploaded: ${fileData.name}`,
+    date: new Date().toISOString()
+  });
+
+  return newFile;
 }
 
 // Background Cron Jobs Simulation
@@ -580,22 +799,15 @@ export function simulateCronJob(): number {
   const notifications = getStoredNotifications();
   let count = 0;
 
-  // Let's assume "tomorrow" relative to our mock environment date "2025-06-17" is "2025-06-18".
-  // Or relative to standard local time, let's find tomorrow's date string.
-  // To keep the demo predictable, we will check if the expiry_date matches "2025-06-18" or "2025-06-21"
-  // (which are the expiring dates in our mock data op2, op5) OR if the date is exactly 1 day from today.
-  
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
   ops.forEach(op => {
-    // If expiring tomorrow (either matching the demo date 2025-06-18, 2025-06-21, or actual tomorrowStr)
     const isTargetExpiring = op.expiry_date === "2025-06-18" || op.expiry_date === "2025-06-21" || op.expiry_date === tomorrowStr;
     const patient = patients.find(p => p.id === op.patient_id);
     
     if (isTargetExpiring && patient && op.status === "expiring") {
-      // Check if notification already scheduled for this patient's OP expiry
       const exists = notifications.some(n => n.patient_id === patient.id && n.type === "op_expiry" && n.status === "pending");
       if (!exists) {
         const message = `Hello ${patient.name}. Your OP validity expires tomorrow (${op.expiry_date}). Please contact Dr. Arjun Mehta's Clinic for follow-up. Thank you.`;
@@ -609,6 +821,15 @@ export function simulateCronJob(): number {
           status: "pending",
           scheduled_at: new Date().toISOString(),
         });
+
+        // Log notification activity
+        addActivityLog({
+          patient_id: patient.id,
+          type: "notification",
+          description: `WhatsApp OP expiry reminder queued for delivery.`,
+          date: new Date().toISOString()
+        });
+
         count++;
       }
     }
@@ -628,6 +849,15 @@ export function processNotificationQueue(): number {
     if (n.status === "pending") {
       n.status = "sent";
       n.sent_at = new Date().toISOString();
+
+      // Log notification activity
+      addActivityLog({
+        patient_id: n.patient_id,
+        type: "notification",
+        description: `WhatsApp reminder successfully sent to +91 ${n.patient_phone}`,
+        date: new Date().toISOString()
+      });
+
       count++;
     }
   });
