@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-geist-sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --background: #F4F7F5; /* Soft, premium sage green-gray background */
+  --foreground: #1A2E26; /* Dark slate-green for high contrast text */
+  --primary: #10B981; /* Premium deep mint green */
+  --primary-hover: #059669;
+  --primary-dark: #1E3F30; /* Dark forest green for headers/accents */
+  --accent-mint: #22C55E; /* Bright mint green for active states */
+  --accent-mint-light: #F0FDF4;
+  --border: #E6EFEA; /* Soft border color matching the sage tint */
+  --card: #FFFFFF;
+  --muted: #627A70; /* Muted text with sage tint */
+  --muted-bg: #EAEFEA;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-geist-sans);
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom utility classes */
+.card-premium {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 4px 20px -2px rgba(135, 155, 145, 0.08);
+}
+
+.badge-mint-active {
+  background-color: #F0FDF4;
+  color: #16A34A;
+  border: 1px solid #DCFCE7;
+}
+
+.badge-mint-expiring {
+  background-color: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FEF3C7;
+}
+
+.badge-mint-expired {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FEE2E2;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBDAD0;
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A7BAAE;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: #D1FAE5;
+  color: #065F46;
+}
