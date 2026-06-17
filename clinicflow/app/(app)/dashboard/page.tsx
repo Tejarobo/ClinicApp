@@ -32,6 +32,7 @@ export default function DashboardPage() {
     )
   );
   const [session, setSession] = useState<{ role: string; name: string } | null>(() => {
+    if (typeof window === "undefined") return null;
     const sess = localStorage.getItem("cf_session");
     return sess ? JSON.parse(sess) : null;
   });
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    loadAllData();
     const interval = setInterval(loadAllData, 2000);
     return () => clearInterval(interval);
   }, []);

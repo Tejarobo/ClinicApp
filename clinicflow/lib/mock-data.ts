@@ -956,3 +956,19 @@ export async function getDoctorsAsync(): Promise<Doctor[]> {
   }
   return getStoredDoctors();
 }
+
+export async function getUserByPhoneAsync(phone: string): Promise<User | undefined> {
+  const normalizedPhone = phone.replace(/\D/g, "");
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("phone", normalizedPhone)
+      .maybeSingle();
+    if (!error && data) return data as User;
+  }
+  
+  // Local lookup fallback from stored users
+  return getStoredUsers().find(u => u.phone.replace(/\D/g, "") === normalizedPhone);
+}
+

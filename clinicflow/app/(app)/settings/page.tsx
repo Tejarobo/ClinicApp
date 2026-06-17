@@ -4,10 +4,16 @@ import { useEffect, useState } from "react";
 import { User, Bell, Shield, Sparkles, Check } from "lucide-react";
 
 export default function SettingsPage() {
-  const [session] = useState<{ name: string; role: string; phone: string } | null>(() => {
-    const val = localStorage.getItem("cf_session");
-    return val ? JSON.parse(val) : null;
-  });
+  const [session, setSession] = useState<{ name: string; role: string; phone: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const val = localStorage.getItem("cf_session");
+      if (val) {
+        setSession(JSON.parse(val));
+      }
+    }
+  }, []);
   
   // Settings values
   const [clinicName, setClinicName] = useState("Dr. Arjun Mehta's Clinic");
