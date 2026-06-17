@@ -55,6 +55,70 @@ If port 3000 is already in use, Next.js will automatically fall back to another 
 - `npm run start` - run the production server
 - `npm run lint` - run Next.js linting
 
+## Deploy to Vercel (from GitHub)
+
+This repository contains the runnable Next.js app in `/clinicflow`, so configure Vercel to use that folder as the project root.
+
+### 1) Push your latest code to GitHub
+
+From your local clone:
+
+```bash
+git add .
+git commit -m "ready for vercel deploy"
+git push origin <your-branch>
+```
+
+### 2) Import the repository in Vercel
+
+1. Go to [https://vercel.com/new](https://vercel.com/new).
+2. Sign in with GitHub and authorize Vercel access if prompted.
+3. Select `Tejarobo/ClinicApp`.
+4. Click **Import**.
+
+### 3) Configure build settings
+
+In the project setup screen, use:
+
+- **Framework Preset:** `Next.js` (auto-detected)
+- **Root Directory:** `clinicflow`
+- **Install Command:** `npm install`
+- **Build Command:** `npm run build`
+- **Output Directory:** leave empty (Next.js default)
+
+Then click **Deploy**.
+
+### 4) Add environment variables (optional, only if using Supabase)
+
+If you want Supabase-backed features, add these in **Project Settings → Environment Variables**:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+If these are not set, the app still runs using local mock data.
+
+### 5) Redeploy after config changes
+
+After adding/changing environment variables:
+
+1. Open your Vercel project.
+2. Go to **Deployments**.
+3. Click **Redeploy** on the latest deployment.
+
+### 6) Set production domain
+
+1. Open **Project Settings → Domains**.
+2. Add your custom domain (optional), or use the default `*.vercel.app` URL.
+
+### 7) Verify deployment
+
+After deployment succeeds:
+
+1. Open the production URL.
+2. Go to `/login`.
+3. Sign in with any demo role or phone + OTP.
+4. Check dashboard, patients, appointments, and settings pages load correctly.
+
 ## Demo Login
 
 Use one of the quick roles on the login screen, or enter a 10-digit phone number and OTP.
@@ -83,4 +147,3 @@ Quick role phone numbers:
 ## Browser Support
 
 The app is designed for modern desktop and mobile browsers.
-
