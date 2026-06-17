@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { UserPlus, Stethoscope, FileText, Bell, ArrowRight } from "lucide-react";
 
 const steps = [
@@ -48,33 +47,15 @@ export default function WorkflowSection() {
       <div className="max-w-6xl mx-auto px-5 sm:px-6">
         {/* Header */}
         <div className="text-center mb-14">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3.5 py-1.5 rounded-full mb-4"
-          >
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3.5 py-1.5 rounded-full mb-4">
             How it works
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight"
-          >
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
             A clinic workflow that actually works
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-3 text-zinc-500 text-base max-w-lg mx-auto"
-          >
+          </h2>
+          <p className="mt-3 text-zinc-500 text-base max-w-lg mx-auto">
             From first registration to OP renewal — ClinicFlow handles the entire patient lifecycle in one place.
-          </motion.p>
+          </p>
         </div>
 
         {/* Steps grid */}
@@ -82,12 +63,8 @@ export default function WorkflowSection() {
           {steps.map((step, i) => {
             const Icon = step.icon;
             return (
-              <motion.div
+              <div
                 key={step.number}
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="relative bg-white rounded-2xl border border-zinc-200 p-6 hover:border-zinc-300 hover:shadow-lg transition-all duration-300 group"
               >
                 {/* Step number */}
@@ -113,7 +90,7 @@ export default function WorkflowSection() {
                     <ArrowRight size={12} className="text-zinc-400" />
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>

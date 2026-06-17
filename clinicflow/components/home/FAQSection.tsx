@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { Plus, Minus } from "lucide-react";
 
 const faqs = [
@@ -39,35 +38,19 @@ export default function FAQSection() {
       <div className="max-w-3xl mx-auto px-5 sm:px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-600 bg-zinc-100 border border-zinc-200 px-3.5 py-1.5 rounded-full mb-4"
-          >
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-600 bg-zinc-100 border border-zinc-200 px-3.5 py-1.5 rounded-full mb-4">
             FAQ
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, delay: 0.1 }}
-            className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight"
-          >
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
             Common questions
-          </motion.h2>
+          </h2>
         </div>
 
         {/* Accordion */}
         <div className="space-y-2">
           {faqs.map((faq, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
               className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
                 open === i
                   ? "border-indigo-200 bg-indigo-50/30"
@@ -75,7 +58,7 @@ export default function FAQSection() {
               }`}
             >
               <button
-                className="w-full flex items-center justify-between px-5 py-4 text-left"
+                className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
                 onClick={() => setOpen(open === i ? null : i)}
               >
                 <span
@@ -96,22 +79,16 @@ export default function FAQSection() {
                 </div>
               </button>
 
-              <AnimatePresence initial={false}>
-                {open === i && (
-                  <motion.div
-                    key="content"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                  >
-                    <p className="px-5 pb-4 text-sm text-zinc-600 leading-relaxed">
-                      {faq.a}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+              <div
+                className={`transition-all duration-200 ease-in-out overflow-hidden ${
+                  open === i ? "max-h-[500px] border-t border-indigo-100/30" : "max-h-0"
+                }`}
+              >
+                <p className="px-5 py-4 text-sm text-zinc-600 leading-relaxed">
+                  {faq.a}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
       </div>

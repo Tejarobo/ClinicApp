@@ -775,6 +775,14 @@ export async function getStoredPatientsAsync(): Promise<Patient[]> {
   return getStoredPatients();
 }
 
+export async function getStoredOPRecordsAsync(): Promise<OPRecord[]> {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from("op_records").select("*");
+    if (!error && data) return data as OPRecord[];
+  }
+  return getStoredOPRecords();
+}
+
 export async function addPatientAsync(patientData: Omit<Patient, "id" | "created_at"> & { validityDays?: number }): Promise<Patient> {
   const fileNum = patientData.file_number.trim();
   if (isSupabaseConfigured && supabase) {
@@ -871,6 +879,14 @@ export async function updatePatientAsync(id: string, updates: Partial<Patient> &
   return updatePatient(id, updates);
 }
 
+export async function getStoredVisitsAsync(): Promise<Visit[]> {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from("visits").select("*").order("date", { ascending: false });
+    if (!error && data) return data as Visit[];
+  }
+  return getStoredVisits();
+}
+
 export async function getVisitsByPatientIdAsync(patientId: string): Promise<Visit[]> {
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from("visits").select("*").eq("patient_id", patientId).order("date", { ascending: false });
@@ -940,6 +956,14 @@ export async function addMedicalFileAsync(fileData: Omit<MedicalFile, "id" | "up
   return addMedicalFile(fileData);
 }
 
+export async function getStoredActivityLogsAsync(): Promise<ActivityLog[]> {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from("activity_logs").select("*").order("date", { ascending: false });
+    if (!error && data) return data as ActivityLog[];
+  }
+  return getStoredActivityLogs().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
 export async function getActivityLogsByPatientIdAsync(patientId: string): Promise<ActivityLog[]> {
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from("activity_logs").select("*").eq("patient_id", patientId).order("date", { ascending: false });
@@ -970,5 +994,15 @@ export async function getUserByPhoneAsync(phone: string): Promise<User | undefin
   
   // Local lookup fallback from stored users
   return getStoredUsers().find(u => u.phone.replace(/\D/g, "") === normalizedPhone);
+}
+
+export async function deletePatientAsync(id: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    await supabase.from("patients").delete().eq("id", id);
+    return;
+  }
+  const stored = getStoredPatients();
+  const updated = stored.filter(p => p.id !== id);
+  savePatients(updated);
 }
 

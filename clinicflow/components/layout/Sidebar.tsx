@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  Stethoscope,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -16,7 +15,6 @@ import { motion } from "motion/react";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Patients", href: "/patients", icon: Users },
-  { label: "Doctors", href: "/doctors", icon: Stethoscope },
 ];
 
 export default function Sidebar() {
