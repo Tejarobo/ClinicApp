@@ -57,6 +57,11 @@ export default function PatientProfilePage() {
   const [vComplaint, setVComplaint] = useState("");
   const [vDiagnosis, setVDiagnosis] = useState("");
   const [vNotes, setVNotes] = useState("");
+  const [vRemedy, setVRemedy] = useState("");
+  const [vPotency, setVPotency] = useState("200C");
+  const [vDosage, setVDosage] = useState("4 pills twice daily");
+  const [vDuration, setVDuration] = useState("7 days");
+  const [vReaction, setVReaction] = useState<"ameliorated" | "aggravated" | "no_change" | "new_symptoms">("ameliorated");
   const [vError, setVError] = useState("");
 
   // Form Fields - File
@@ -167,13 +172,23 @@ export default function PatientProfilePage() {
         notes: vNotes.trim(),
         doctor: vDoctor.trim(),
         complaint: vComplaint.trim(),
-        diagnosis: vDiagnosis.trim()
+        diagnosis: vDiagnosis.trim(),
+        remedy: vRemedy.trim() || undefined,
+        potency: vPotency.trim() || undefined,
+        dosage: vDosage.trim() || undefined,
+        duration: vDuration.trim() || undefined,
+        remedy_reaction: vReaction || undefined,
       });
 
       setIsVisitOpen(false);
       setVComplaint("");
       setVDiagnosis("");
       setVNotes("");
+      setVRemedy("");
+      setVPotency("200C");
+      setVDosage("4 pills twice daily");
+      setVDuration("7 days");
+      setVReaction("ameliorated");
       await loadPatientData();
     } catch (err) {
       setVError(err instanceof Error ? err.message : "Error saving visit");
@@ -393,6 +408,79 @@ export default function PatientProfilePage() {
             </div>
           </div>
 
+          {/* Homeopathy Case Sheet Card */}
+          <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-zinc-950">Homeopathic Case Sheet (Generals)</h3>
+                <p className="text-xs text-zinc-400 mt-0.5">Physical and mental constitutional profile</p>
+              </div>
+              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-150 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Active Profile
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4.5 pt-1.5">
+              {/* Thermal State */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-3.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Thermal State</span>
+                <p className="text-xs font-bold text-zinc-800 mt-2">
+                  {patient.thermal_state || "Not recorded"}
+                </p>
+              </div>
+
+              {/* Thirst */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-3.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Thirst</span>
+                <p className="text-xs font-bold text-zinc-800 mt-2">
+                  {patient.thirst || "Not recorded"}
+                </p>
+              </div>
+
+              {/* Appetite */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-3.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Appetite</span>
+                <p className="text-xs font-bold text-zinc-800 mt-2">
+                  {patient.appetite || "Not recorded"}
+                </p>
+              </div>
+
+              {/* Sleep & Dreams */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-3.5 rounded-2xl flex flex-col justify-between">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Sleep & Dreams</span>
+                <p className="text-xs font-bold text-zinc-800 mt-2">
+                  {patient.sleep ? `${patient.sleep}${patient.dreams ? ` (Dreams: ${patient.dreams})` : ""}` : "Not recorded"}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4.5 mt-4">
+              {/* Mind Symptoms */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-4 rounded-2xl md:col-span-1 space-y-1">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Mind & Disposition</span>
+                <p className="text-xs font-semibold text-zinc-700 leading-relaxed pt-1">
+                  {patient.mind_symptoms || "No specific mental symptoms recorded."}
+                </p>
+              </div>
+
+              {/* Modalities */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-4 rounded-2xl md:col-span-1 space-y-1">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Aggravation / Amelioration</span>
+                <p className="text-xs font-semibold text-zinc-700 leading-relaxed pt-1">
+                  {patient.modalities || "No modalities logged."}
+                </p>
+              </div>
+
+              {/* Desires & Aversions */}
+              <div className="bg-zinc-50/55 border border-zinc-150/45 p-4 rounded-2xl md:col-span-1 space-y-1">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Desires & Aversions</span>
+                <p className="text-xs font-semibold text-zinc-700 leading-relaxed pt-1">
+                  {patient.desires_aversions || "No specific food desires/aversions recorded."}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Recent Timeline Section (Last 5 events) */}
           <div className="bg-white rounded-[24px] border border-[#E6EFEA] p-6 shadow-sm space-y-5">
             <h3 className="text-sm font-bold text-zinc-900">Recent Activity Timeline</h3>
@@ -451,35 +539,91 @@ export default function PatientProfilePage() {
               <p className="text-sm text-zinc-400 font-bold">No consultations registered</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-zinc-50/50 border-b border-[#E6EFEA] text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                    <th className="px-6 py-3.5 font-bold">Visit #</th>
-                    <th className="px-6 py-3.5 font-bold">Date</th>
-                    <th className="px-6 py-3.5 font-bold">Doctor</th>
-                    <th className="px-6 py-3.5 font-bold">Chief Complaint</th>
-                    <th className="px-6 py-3.5 font-bold">Diagnosis</th>
-                    <th className="px-6 py-3.5 font-bold">Prescription &amp; Notes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E6EFEA] text-xs text-zinc-650 font-semibold">
-                  {visits.map((v) => (
-                    <tr key={v.id} className="hover:bg-zinc-50/20">
-                      <td className="px-6 py-4 whitespace-nowrap text-zinc-900 font-extrabold">
-                        Visit #{v.visit_number}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-zinc-700">
-                        {new Date(v.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-zinc-800">{v.doctor}</td>
-                      <td className="px-6 py-4">{v.complaint || "Routine follow-up"}</td>
-                      <td className="px-6 py-4 text-[#10B981] font-bold">{v.diagnosis || "Under evaluation"}</td>
-                      <td className="px-6 py-4 max-w-[280px] break-words">{v.notes}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="p-6 space-y-6">
+              {visits.map((v) => {
+                let reactionBadge = null;
+                if (v.remedy_reaction) {
+                  const label = v.remedy_reaction.replace("_", " ");
+                  const style =
+                    v.remedy_reaction === "ameliorated"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-150"
+                      : v.remedy_reaction === "aggravated"
+                      ? "bg-amber-50 text-amber-700 border border-amber-150"
+                      : v.remedy_reaction === "new_symptoms"
+                      ? "bg-purple-50 text-purple-700 border border-purple-150"
+                      : "bg-zinc-100 text-zinc-655 border border-zinc-200";
+                  reactionBadge = (
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${style}`}>
+                      {label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <div key={v.id} className="border border-zinc-200/80 rounded-2xl p-5 hover:shadow-md transition-all duration-200 bg-white">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-50 pb-3 mb-4 gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-extrabold text-zinc-900">Visit #{v.visit_number}</span>
+                        <span className="text-[10px] font-bold text-zinc-405 capitalize px-2 py-0.5 rounded bg-zinc-50 border border-zinc-100">
+                          {v.type}
+                        </span>
+                        {reactionBadge}
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="text-[11px] text-zinc-400 font-semibold block">
+                          {new Date(v.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-bold block mt-0.5">{v.doctor}</span>
+                      </div>
+                    </div>
+
+                    {/* Complaint & Diagnosis */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">Chief Complaint</span>
+                        <p className="text-xs font-semibold text-zinc-700">{v.complaint || "Routine review"}</p>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">Diagnosis</span>
+                        <p className="text-xs font-extrabold text-[#10B981]">{v.diagnosis || "Under evaluation"}</p>
+                      </div>
+                    </div>
+
+                    {/* Homeopathy Prescription slip */}
+                    {v.remedy && (
+                      <div className="border border-dashed border-indigo-150 bg-indigo-50/15 rounded-xl p-4 mb-4 relative overflow-hidden">
+                        <span className="absolute -right-3 -bottom-5 text-7xl font-serif text-indigo-500/10 italic select-none font-bold">Rx</span>
+                        <div className="flex items-start gap-4">
+                          <span className="text-base font-serif text-indigo-600 italic font-bold shrink-0 mt-0.5">Rx</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1 text-xs">
+                            <div>
+                              <span className="text-[9px] text-indigo-400 font-bold block">REMEDY & POTENCY</span>
+                              <strong className="text-zinc-800 font-bold text-[13px]">{v.remedy} {v.potency}</strong>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-indigo-400 font-bold block">DOSAGE</span>
+                              <span className="text-zinc-750 font-semibold">{v.dosage || "As directed"}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-indigo-400 font-bold block">DURATION</span>
+                              <span className="text-zinc-750 font-semibold">{v.duration || "7 days"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clinical Notes */}
+                    <div>
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-1">Advice & Notes</span>
+                      <p className="text-xs text-zinc-600 leading-relaxed font-medium bg-zinc-50/50 p-3 rounded-xl border border-zinc-100">
+                        {v.notes}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -674,6 +818,79 @@ export default function PatientProfilePage() {
                 />
               </div>
 
+              {/* Homeopathy Remedy details */}
+              <div className="pt-3 border-t border-zinc-100 space-y-3">
+                <h4 className="text-xs font-bold text-indigo-650 uppercase tracking-widest">
+                  Homeopathic Remedy
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Remedy Name */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Remedy Name</label>
+                    <input
+                      type="text"
+                      value={vRemedy}
+                      onChange={(e) => setVRemedy(e.target.value)}
+                      placeholder="e.g. Lycopodium"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                  {/* Potency */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Potency</label>
+                    <input
+                      type="text"
+                      value={vPotency}
+                      onChange={(e) => setVPotency(e.target.value)}
+                      placeholder="e.g. 200C, 1M, LM 0/3"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Dosage */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Dosage</label>
+                    <input
+                      type="text"
+                      value={vDosage}
+                      onChange={(e) => setVDosage(e.target.value)}
+                      placeholder="e.g. 4 pills twice daily"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                  {/* Duration */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Duration</label>
+                    <input
+                      type="text"
+                      value={vDuration}
+                      onChange={(e) => setVDuration(e.target.value)}
+                      placeholder="e.g. 7 days"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {vType === "follow-up" && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Remedy Reaction (Progress)</label>
+                    <select
+                      value={vReaction}
+                      onChange={(e) => setVReaction(e.target.value as any)}
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white font-semibold"
+                    >
+                      <option value="ameliorated">Ameliorated (Improved)</option>
+                      <option value="aggravated">Aggravated (Worse)</option>
+                      <option value="no_change">No Change</option>
+                      <option value="new_symptoms">New Symptoms</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
               <div>
                 <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Clinical Notes &amp; Advice *</label>
                 <textarea

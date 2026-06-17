@@ -34,6 +34,16 @@ export default function PatientsPage() {
   const [notes, setNotes] = useState("");
   const [validityDays, setValidityDays] = useState(30);
 
+  // Homeopathy Specific Case Sheet
+  const [appetite, setAppetite] = useState("");
+  const [thirst, setThirst] = useState("");
+  const [sleep, setSleep] = useState("");
+  const [dreams, setDreams] = useState("");
+  const [thermalState, setThermalState] = useState("Ambi-thermal");
+  const [mindSymptoms, setMindSymptoms] = useState("");
+  const [modalities, setModalities] = useState("");
+  const [desiresAversions, setDesiresAversions] = useState("");
+
   // Errors
   const [error, setError] = useState("");
 
@@ -68,6 +78,14 @@ export default function PatientsPage() {
     setDisease("");
     setNotes("");
     setValidityDays(30);
+    setAppetite("");
+    setThirst("");
+    setSleep("");
+    setDreams("");
+    setThermalState("Ambi-thermal");
+    setMindSymptoms("");
+    setModalities("");
+    setDesiresAversions("");
     setError("");
     setIsOpen(true);
   }
@@ -83,6 +101,14 @@ export default function PatientsPage() {
     setDisease(p.disease);
     setNotes(p.notes);
     setValidityDays(op ? op.validity_days : 30);
+    setAppetite(p.appetite || "");
+    setThirst(p.thirst || "");
+    setSleep(p.sleep || "");
+    setDreams(p.dreams || "");
+    setThermalState(p.thermal_state || "Ambi-thermal");
+    setMindSymptoms(p.mind_symptoms || "");
+    setModalities(p.modalities || "");
+    setDesiresAversions(p.desires_aversions || "");
     setError("");
     setIsOpen(true);
   }
@@ -128,6 +154,14 @@ export default function PatientsPage() {
       disease: disease.trim(),
       notes: notes.trim(),
       tags: editingPatient ? editingPatient.tags : [],
+      appetite: appetite.trim(),
+      thirst: thirst.trim(),
+      sleep: sleep.trim(),
+      dreams: dreams.trim(),
+      thermal_state: thermalState,
+      mind_symptoms: mindSymptoms.trim(),
+      modalities: modalities.trim(),
+      desires_aversions: desiresAversions.trim(),
     };
 
     try {
@@ -458,6 +492,107 @@ export default function PatientsPage() {
                   placeholder="e.g. Chronic Asthma, Eczema"
                   className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-sm text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
                 />
+              </div>
+
+              {/* Case History Section divider */}
+              <div className="pt-4 border-t border-zinc-100 space-y-4">
+                <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
+                  Homeopathic Case Sheet (Generals)
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Thermal State */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Thermal State</label>
+                    <select
+                      value={thermalState}
+                      onChange={(e) => setThermalState(e.target.value)}
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all font-semibold"
+                    >
+                      <option value="Ambi-thermal">Ambi-thermal</option>
+                      <option value="Chilly">Chilly</option>
+                      <option value="Hot">Hot</option>
+                    </select>
+                  </div>
+                  {/* Thirst */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Thirst</label>
+                    <input
+                      type="text"
+                      value={thirst}
+                      onChange={(e) => setThirst(e.target.value)}
+                      placeholder="e.g. Large quantities, thirstless"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Appetite */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Appetite</label>
+                    <input
+                      type="text"
+                      value={appetite}
+                      onChange={(e) => setAppetite(e.target.value)}
+                      placeholder="e.g. Normal, ravenous"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                  {/* Sleep */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Sleep</label>
+                    <input
+                      type="text"
+                      value={sleep}
+                      onChange={(e) => setSleep(e.target.value)}
+                      placeholder="e.g. Restless sleep"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Dreams */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Dreams</label>
+                    <input
+                      type="text"
+                      value={dreams}
+                      onChange={(e) => setDreams(e.target.value)}
+                      placeholder="e.g. Falling, snakes, water"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                  {/* Desires & Aversions */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Desires / Aversions</label>
+                    <input
+                      type="text"
+                      value={desiresAversions}
+                      onChange={(e) => setDesiresAversions(e.target.value)}
+                      placeholder="e.g. Desires sweets, spicy"
+                      className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Mental State & Mind Symptoms</label>
+                  <input
+                    type="text"
+                    value={mindSymptoms}
+                    onChange={(e) => setMindSymptoms(e.target.value)}
+                    placeholder="e.g. Irritable, seeks consolation, anxious"
+                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Modalities (Worse / Better factors)</label>
+                  <input
+                    type="text"
+                    value={modalities}
+                    onChange={(e) => setModalities(e.target.value)}
+                    placeholder="e.g. Worse at night, better warm bath"
+                    className="w-full h-11 px-4 rounded-xl border border-[#E6EFEA] bg-[#F8FAF9] text-xs text-gray-900 outline-none focus:border-[#10B981] focus:bg-white transition-all placeholder-gray-400 font-semibold"
+                  />
+                </div>
               </div>
 
               {/* Notes */}

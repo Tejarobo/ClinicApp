@@ -96,7 +96,17 @@ CREATE TABLE IF NOT EXISTS patients (
   tags TEXT[] DEFAULT '{}'::text[] NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   last_visit TIMESTAMP WITH TIME ZONE,
-  avatar_url TEXT
+  avatar_url TEXT,
+  
+  -- Homeopathy Physical Generals & Case Sheet
+  appetite TEXT,
+  thirst TEXT,
+  sleep TEXT,
+  dreams TEXT,
+  thermal_state TEXT,
+  mind_symptoms TEXT,
+  modalities TEXT,
+  desires_aversions TEXT
 );
 
 -- VISITS TABLE
@@ -109,7 +119,14 @@ CREATE TABLE IF NOT EXISTS visits (
   notes TEXT NOT NULL,
   doctor TEXT NOT NULL,
   complaint TEXT,
-  diagnosis TEXT
+  diagnosis TEXT,
+  
+  -- Homeopathy Prescription
+  remedy TEXT,
+  potency TEXT,
+  dosage TEXT,
+  duration TEXT,
+  remedy_reaction TEXT
 );
 
 -- MEDICAL FILES TABLE

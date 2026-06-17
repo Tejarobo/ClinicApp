@@ -9,11 +9,19 @@ export const mockPatients: Patient[] = [
     age: 56,
     gender: "male",
     phone: "9876543210",
-    disease: "Type 2 Diabetes",
-    notes: "On Metformin 500mg. Review HbA1c every 3 months.",
-    tags: ["Diabetes", "Hypertension"],
+    disease: "Chronic Osteoarthritis",
+    notes: "Severe stiffness in knee joints. Symptoms aggravate during damp rainy seasons.",
+    tags: ["Joint Pain", "Rheumatic"],
     created_at: "2024-01-05T09:00:00Z",
     last_visit: "2025-04-09T10:00:00Z",
+    appetite: "Normal, but feels heavy after eating",
+    thirst: "Thirsty for large quantities at long intervals",
+    sleep: "Restless sleep, wakes up around 3 AM",
+    dreams: "Dreams of daily business activities",
+    thermal_state: "Chilly (sensitive to cold drafts)",
+    mind_symptoms: "Anxious about health, highly methodical and tidy",
+    modalities: "Worse in cold damp air and when beginning to move; better by warmth and continuous motion",
+    desires_aversions: "Desires warm drinks and sweets; aversion to milk"
   },
   {
     id: "p2",
@@ -22,11 +30,19 @@ export const mockPatients: Patient[] = [
     age: 34,
     gender: "female",
     phone: "9123456789",
-    disease: "Thyroid",
-    notes: "Hypothyroidism. TSH levels to be monitored.",
-    tags: ["Thyroid"],
+    disease: "Migraine & Allergic Rhinitis",
+    notes: "Right-sided headaches accompanied by nausea. Exaggerated sneezing in morning.",
+    tags: ["Migraine", "Allergy"],
     created_at: "2024-02-10T09:00:00Z",
     last_visit: "2025-03-15T11:00:00Z",
+    appetite: "Reduced appetite during headache episodes",
+    thirst: "Thirstless",
+    sleep: "Sleepy during the day, light sleeper at night",
+    dreams: "Dreams of falling or being pursued",
+    thermal_state: "Hot (needs open windows and fresh air)",
+    mind_symptoms: "Mild, gentle disposition; easily weeps, seeks consolidation",
+    modalities: "Worse in a warm stuffy room, lying on left side; better in open fresh air and slow walking",
+    desires_aversions: "Desires ice creams and sour foods; aversion to fatty food"
   },
   {
     id: "p3",
@@ -35,11 +51,19 @@ export const mockPatients: Patient[] = [
     age: 62,
     gender: "male",
     phone: "9988776655",
-    disease: "Hypertension, Kidney Disease",
-    notes: "CKD Stage 2. Restrict salt intake. Monthly creatinine check.",
-    tags: ["Hypertension", "Kidney", "CKD"],
+    disease: "Acid Peptic Disease (GERD)",
+    notes: "Burning sensation in stomach. Belching improves symptoms temporarily.",
+    tags: ["GERD", "Gastric"],
     created_at: "2024-03-01T09:00:00Z",
     last_visit: "2025-05-20T09:30:00Z",
+    appetite: "Good, but gets hungry quickly, feels weak if meal delayed",
+    thirst: "Thirsty, desires small sips frequently",
+    sleep: "Sound, but sleepy after dinner",
+    dreams: "No specific recurring dreams",
+    thermal_state: "Ambi-thermal",
+    mind_symptoms: "Irritable when hungry, highly intellectual and likes arguments",
+    modalities: "Worse 1 hour after eating, warm applications; better by cold drinks and walking about",
+    desires_aversions: "Desires warm spicy food; aversion to sweets"
   },
   {
     id: "p4",
@@ -48,11 +72,19 @@ export const mockPatients: Patient[] = [
     age: 48,
     gender: "female",
     phone: "9654321098",
-    disease: "Arthritis",
-    notes: "Rheumatoid arthritis. On DMARDs.",
-    tags: ["Arthritis"],
+    disease: "Eczema / Dry Dermatitis",
+    notes: "Itching worse at night when warm in bed. Bleeding upon scratching.",
+    tags: ["Eczema", "Skin"],
     created_at: "2024-04-12T09:00:00Z",
     last_visit: "2025-04-30T14:00:00Z",
+    appetite: "Increased, craves sweets and salty items",
+    thirst: "Very thirsty for cold water",
+    sleep: "Wakes up with dry skin itching",
+    dreams: "Dreams of fire and dead people",
+    thermal_state: "Chilly",
+    mind_symptoms: "Self-centered, anxious about future, forgets names easily",
+    modalities: "Worse by water washing, heat of bed; better by dry cold weather",
+    desires_aversions: "Desires spicy pickles and sweets; aversion to boiled vegetables"
   },
   {
     id: "p5",
@@ -61,11 +93,19 @@ export const mockPatients: Patient[] = [
     age: 41,
     gender: "male",
     phone: "9765432109",
-    disease: "Asthma",
-    notes: "Moderate persistent asthma. Salbutamol inhaler PRN.",
-    tags: ["Asthma", "Allergy"],
+    disease: "Bronchial Asthma",
+    notes: "Dyspnea on exertion. Wheezing and dry cough at night.",
+    tags: ["Asthma", "Respiratory"],
     created_at: "2024-05-20T09:00:00Z",
     last_visit: "2025-05-01T10:00:00Z",
+    appetite: "Normal",
+    thirst: "Thirsty, drinks half a glass at a time",
+    sleep: "Wakes up gasping for air, must sit up",
+    dreams: "Dreams of robbers and choking",
+    thermal_state: "Chilly (takes cold easily)",
+    mind_symptoms: "Restless, anxious, fears death or suffocating alone",
+    modalities: "Worse between 12 AM to 2 AM, lying down; better by sitting erect and warm drinks",
+    desires_aversions: "Desires hot milk; aversion to cold salads"
   },
   {
     id: "p6",
@@ -74,11 +114,19 @@ export const mockPatients: Patient[] = [
     age: 28,
     gender: "female",
     phone: "9543210987",
-    disease: "PCOD",
-    notes: "PCOD with irregular cycles. On hormonal therapy.",
-    tags: ["PCOD", "Hormonal"],
+    disease: "PCOS & Acne Vulgaris",
+    notes: "Irregular menstrual cycles. Painful cystic acne on cheeks.",
+    tags: ["PCOS", "Acne"],
     created_at: "2024-06-08T09:00:00Z",
     last_visit: "2025-05-18T11:00:00Z",
+    appetite: "Constant craving for sweets and chocolates",
+    thirst: "Moderate",
+    sleep: "Sleeps on stomach, dreams of snakes",
+    dreams: "Dreams of family conflicts",
+    thermal_state: "Hot (cannot tolerate summer sun)",
+    mind_symptoms: "Highly emotional, gets offended easily, avoids company",
+    modalities: "Worse before menses, warm weather; better by cold washing, crying out loud",
+    desires_aversions: "Desires chocolates and salt; aversion to meat"
   },
 ];
 
@@ -89,8 +137,13 @@ export const mockVisits: Visit[] = [
     visit_number: 1,
     date: "2025-01-05T10:00:00Z",
     type: "consultation",
-    notes: "Started Metformin 500mg twice daily. Diet counseling done.",
+    notes: "Detailed case taking. Prescribed Rhus Tox.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Rhus Toxicodendron",
+    potency: "200C",
+    dosage: "4 pills twice daily",
+    duration: "7 days",
+    remedy_reaction: "new_symptoms"
   },
   {
     id: "v2",
@@ -98,8 +151,13 @@ export const mockVisits: Visit[] = [
     visit_number: 2,
     date: "2025-02-12T10:00:00Z",
     type: "consultation",
-    notes: "HbA1c: 7.8%. Slightly elevated. Continuing medication.",
+    notes: "Stiffness is slightly better, but joints still crack and ache on damp days.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Rhus Toxicodendron",
+    potency: "1M",
+    dosage: "Single dose in morning",
+    duration: "1 day",
+    remedy_reaction: "ameliorated"
   },
   {
     id: "v3",
@@ -107,8 +165,13 @@ export const mockVisits: Visit[] = [
     visit_number: 3,
     date: "2025-03-02T10:00:00Z",
     type: "follow-up",
-    notes: "Metformin increased to 1000mg. Patient tolerating well.",
+    notes: "Significant relief in mobility. General wellness is good.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Bryonia Alba",
+    potency: "200C",
+    dosage: "4 pills once daily",
+    duration: "14 days",
+    remedy_reaction: "ameliorated"
   },
   {
     id: "v4",
@@ -116,8 +179,13 @@ export const mockVisits: Visit[] = [
     visit_number: 4,
     date: "2025-04-09T10:00:00Z",
     type: "follow-up",
-    notes: "HbA1c improved to 7.1%. Good progress.",
+    notes: "Joint pain completely manageable. Can walk 2km easily.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Bryonia Alba",
+    potency: "200C",
+    dosage: "Placebo / Sac Lac",
+    duration: "30 days",
+    remedy_reaction: "ameliorated"
   },
   {
     id: "v5",
@@ -125,8 +193,13 @@ export const mockVisits: Visit[] = [
     visit_number: 1,
     date: "2025-03-15T11:00:00Z",
     type: "consultation",
-    notes: "TSH: 8.2 mIU/L. Started Levothyroxine 50mcg.",
+    notes: "Migraine pain intensifies under warm room or sun. Pulsatilla prescribed.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Pulsatilla Nigricans",
+    potency: "200C",
+    dosage: "4 pills twice daily",
+    duration: "15 days",
+    remedy_reaction: "new_symptoms"
   },
   {
     id: "v6",
@@ -134,8 +207,13 @@ export const mockVisits: Visit[] = [
     visit_number: 1,
     date: "2025-05-20T09:30:00Z",
     type: "follow-up",
-    notes: "Creatinine: 1.6 mg/dL. Stable. Continue low-protein diet.",
+    notes: "Gastric burning improves after warm water. Nux Vomica prescribed.",
     doctor: "Dr. Arjun Mehta",
+    remedy: "Nux Vomica",
+    potency: "30C",
+    dosage: "4 pills at night bed time",
+    duration: "7 days",
+    remedy_reaction: "ameliorated"
   },
 ];
 
@@ -800,6 +878,14 @@ export async function addPatientAsync(patientData: Omit<Patient, "id" | "created
       disease: patientData.disease,
       notes: patientData.notes,
       tags: patientData.tags || [],
+      appetite: patientData.appetite,
+      thirst: patientData.thirst,
+      sleep: patientData.sleep,
+      dreams: patientData.dreams,
+      thermal_state: patientData.thermal_state,
+      mind_symptoms: patientData.mind_symptoms,
+      modalities: patientData.modalities,
+      desires_aversions: patientData.desires_aversions
     }).select().single();
 
     if (error) throw new Error(error.message);
@@ -838,7 +924,15 @@ export async function updatePatientAsync(id: string, updates: Partial<Patient> &
       phone: updates.phone,
       disease: updates.disease,
       notes: updates.notes,
-      tags: updates.tags
+      tags: updates.tags,
+      appetite: updates.appetite,
+      thirst: updates.thirst,
+      sleep: updates.sleep,
+      dreams: updates.dreams,
+      thermal_state: updates.thermal_state,
+      mind_symptoms: updates.mind_symptoms,
+      modalities: updates.modalities,
+      desires_aversions: updates.desires_aversions
     };
     // Clean undefined fields
     (Object.keys(patientFields) as Array<keyof Patient>).forEach(key => {
@@ -909,6 +1003,11 @@ export async function addVisitAsync(visitData: Omit<Visit, "id" | "visit_number"
       doctor: visitData.doctor,
       complaint: visitData.complaint,
       diagnosis: visitData.diagnosis,
+      remedy: visitData.remedy,
+      potency: visitData.potency,
+      dosage: visitData.dosage,
+      duration: visitData.duration,
+      remedy_reaction: visitData.remedy_reaction
     }).select().single();
 
     if (error) throw new Error(error.message);

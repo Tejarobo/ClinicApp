@@ -23,6 +23,16 @@ export interface Patient {
   created_at: string;
   last_visit?: string;
   avatar_url?: string;
+  
+  // Homeopathic Case Sheet Generals
+  appetite?: string;
+  thirst?: string;
+  sleep?: string;
+  dreams?: string;
+  thermal_state?: string;
+  mind_symptoms?: string;
+  modalities?: string;
+  desires_aversions?: string;
 }
 
 export interface Doctor {
@@ -56,6 +66,13 @@ export interface Visit {
   complaint?: string;
   diagnosis?: string;
   files?: MedicalFile[];
+  
+  // Homeopathic Prescription Details
+  remedy?: string;
+  potency?: string;
+  dosage?: string;
+  duration?: string;
+  remedy_reaction?: "ameliorated" | "aggravated" | "no_change" | "new_symptoms";
 }
 
 export interface MedicalFile {
