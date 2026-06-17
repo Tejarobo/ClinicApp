@@ -1,29 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Bell } from "lucide-react";
-import { getStoredNotifications } from "@/lib/mock-data";
+import { Search } from "lucide-react";
 import SpotlightSearch from "@/components/layout/SpotlightSearch";
-import Link from "next/link";
 
 export default function Header() {
   const [session, setSession] = useState<{ name: string; role: string } | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
 
   useEffect(() => {
     const val = localStorage.getItem("cf_session");
     if (val) setSession(JSON.parse(val));
-  }, []);
-
-  useEffect(() => {
-    const update = () => {
-      const notes = getStoredNotifications();
-      setPendingCount(notes.filter((n) => n.status === "pending").length);
-    };
-    update();
-    const interval = setInterval(update, 2000);
-    return () => clearInterval(interval);
   }, []);
 
   // Cmd+K / Ctrl+K to open spotlight
@@ -66,19 +53,6 @@ export default function Header() {
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Notifications */}
-        <Link
-          href="/notifications"
-          className="relative w-9 h-9 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-150 shrink-0"
-        >
-          <Bell size={16} />
-          {pendingCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white animate-pulse">
-              {pendingCount}
-            </span>
-          )}
-        </Link>
 
         {/* Avatar */}
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[13px] font-bold shadow-sm cursor-pointer shrink-0">

@@ -53,9 +53,17 @@ CREATE TYPE medical_file_type AS ENUM ('prescription', 'previous_record', 'exter
 CREATE TYPE op_status_type AS ENUM ('active', 'expiring', 'expired');
 CREATE TYPE activity_log_type AS ENUM ('registration', 'visit', 'file_upload', 'op_renewal');
 
+-- CLINICS TABLE
+CREATE TABLE IF NOT EXISTS clinics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- USERS TABLE
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   phone VARCHAR UNIQUE NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin', 'doctor', 'receptionist')),
@@ -66,6 +74,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- DOCTORS TABLE
 CREATE TABLE IF NOT EXISTS doctors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   phone VARCHAR NOT NULL,
   specialization TEXT DEFAULT 'Homeopathy' NOT NULL,
@@ -76,6 +85,7 @@ CREATE TABLE IF NOT EXISTS doctors (
 -- PATIENTS TABLE
 CREATE TABLE IF NOT EXISTS patients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE,
   file_number VARCHAR UNIQUE NOT NULL,
   name TEXT NOT NULL,
   age INTEGER NOT NULL,

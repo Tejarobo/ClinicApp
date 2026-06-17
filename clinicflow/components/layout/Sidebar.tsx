@@ -10,7 +10,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { motion } from "motion/react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -43,7 +42,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`relative flex flex-col border-r transition-all duration-300 ease-in-out min-h-screen shrink-0 ${
+      className={`relative flex flex-col border-r transition-all duration-200 ease-in-out min-h-screen shrink-0 ${
         collapsed ? "w-[68px]" : "w-[240px]"
       }`}
       style={{ background: "var(--sidebar-bg)", borderColor: "var(--sidebar-border)" }}
@@ -62,13 +61,9 @@ export default function Sidebar() {
           </svg>
         </div>
         {!collapsed && (
-          <motion.span
-            initial={false}
-            animate={{ opacity: 1 }}
-            className="text-[15px] font-bold text-white tracking-tight"
-          >
+          <span className="text-[15px] font-bold text-white tracking-tight">
             ClinicFlow
-          </motion.span>
+          </span>
         )}
       </div>
 
@@ -132,7 +127,7 @@ export default function Sidebar() {
         <button
           onClick={handleLogout}
           title="Sign out"
-          className={`w-full flex items-center h-9 px-3 rounded-xl text-zinc-600 hover:text-red-400 hover:bg-red-500/8 transition-all duration-150 text-[13px] font-medium ${
+          className={`w-full flex items-center h-9 px-3 rounded-xl text-zinc-600 hover:text-red-400 hover:bg-red-500/8 transition-all duration-150 text-[13px] font-medium cursor-pointer ${
             collapsed ? "justify-center" : "gap-2.5"
           }`}
         >
@@ -144,17 +139,17 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`w-full flex items-center h-9 px-3 rounded-xl text-zinc-700 hover:text-zinc-300 hover:bg-white/5 transition-all duration-150 text-[13px] font-medium ${
+          className={`w-full flex items-center h-9 px-3 rounded-xl text-zinc-700 hover:text-zinc-300 hover:bg-white/5 transition-all duration-150 text-[13px] font-medium cursor-pointer ${
             collapsed ? "justify-center" : "gap-2.5"
           }`}
         >
           {collapsed ? (
             <PanelLeftOpen size={15} className="shrink-0" />
           ) : (
-            <>
+            <div className="flex items-center gap-2.5">
               <PanelLeftClose size={15} className="shrink-0" />
               <span>Collapse</span>
-            </>
+            </div>
           )}
         </button>
       </div>

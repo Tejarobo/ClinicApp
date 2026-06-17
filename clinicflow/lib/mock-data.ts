@@ -1006,3 +1006,83 @@ export async function deletePatientAsync(id: string): Promise<void> {
   savePatients(updated);
 }
 
+export async function createClinicAsync(data: { clinicName: string; doctorName: string; phone: string }): Promise<void> {
+  const normalizedPhone = data.phone.replace(/\D/g, "");
+  
+  if (isSupabaseConfigured && supabase) {
+    // 1. Create Clinic
+    const { data: clinic, error: clinicError } = await supabase
+      .from("clinics")
+      .insert({ name: data.clinicName })
+      .select()
+      .single();
+    
+    if (clinicError || !clinic) throw new Error(clinicError?.message || "Failed to create clinic");
+    
+    // 2. Create Doctor
+    const { error: doctorError } = await supabase
+      .from("doctors")
+      .insert({
+        clinic_id: clinic.id,
+        name: data.doctorName,
+        phone: normalizedPhone,
+        specialization: "Homeopathy"
+      });
+      
+    if (doctorError) throw new Error(doctorError.message);
+    
+    // 3. Create User
+    const { error: userError } = await supabase
+      .from("users")
+      .insert({
+        clinic_id: clinic.id,
+        name: data.doctorName,
+        phone: normalizedPhone,
+        role: "doctor"
+      });
+      
+    if (userError) throw new Error(userError.message);
+    
+    return;
+  }
+  
+  // LocalStorage Fallback
+  const clinicsKey = "cf_clinics";
+  const clinicId = `c_${Date.now()}`;
+  const newClinic = { id: clinicId, name: data.clinicName, created_at: new Date().toISOString() };
+  
+  const newDoctor = {
+    id: `d_${Date.now()}`,
+    clinic_id: clinicId,
+    name: data.doctorName,
+    phone: normalizedPhone,
+    specialization: "Homeopathy",
+    is_active: true,
+    created_at: new Date().toISOString()
+  };
+  
+  const newUser = {
+    id: `u_${Date.now()}`,
+    clinic_id: clinicId,
+    name: data.doctorName,
+    phone: normalizedPhone,
+    role: "doctor" as const,
+    is_active: true,
+    created_at: new Date().toISOString()
+  };
+  
+  if (typeof window !== "undefined") {
+    const storedClinics = JSON.parse(localStorage.getItem(clinicsKey) || "[]");
+    storedClinics.push(newClinic);
+    localStorage.setItem(clinicsKey, JSON.stringify(storedClinics));
+    
+    const storedUsers = getStoredUsers();
+    storedUsers.push(newUser);
+    saveUsers(storedUsers);
+    
+    const storedDoctors = getStoredDoctors();
+    storedDoctors.push(newDoctor);
+    saveDoctors(storedDoctors);
+  }
+}
+

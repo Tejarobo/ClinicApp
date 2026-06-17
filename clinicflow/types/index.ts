@@ -3,8 +3,15 @@ export type VisitType = "consultation" | "follow-up" | "blood-report" | "procedu
 export type FileType = "prescription" | "previous_record" | "external_report";
 export type OPStatus = "active" | "expiring" | "expired";
 
+export interface Clinic {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface Patient {
   id: string;
+  clinic_id?: string;
   file_number: string;
   name: string;
   age: number;
@@ -20,6 +27,7 @@ export interface Patient {
 
 export interface Doctor {
   id: string;
+  clinic_id?: string;
   name: string;
   phone: string;
   specialization: string;
@@ -29,6 +37,7 @@ export interface Doctor {
 
 export interface User {
   id: string;
+  clinic_id?: string;
   name: string;
   phone: string;
   role: "doctor" | "receptionist" | "admin";
