@@ -1,0 +1,5 @@
+{
+  "installCommand": "ls -la && if [ -d \"clinicflow\" ]; then cd clinicflow && npm install; else npm install; fi",
+  "buildCommand": "pwd && ls -la && if [ -d \"clinicflow\" ]; then cd clinicflow && npm run build; else npm run build; fi",
+  "outputDirectory": "clinicflow/.next"
+}
